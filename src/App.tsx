@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   ReactFlow, Background, Controls, MiniMap,
   useNodesState, useEdgesState,
@@ -9,13 +9,15 @@ import '@xyflow/react/dist/style.css';
 
 import type { Device, DeviceCategory, ViewMode, SortMode } from './types';
 import { DEVICE_CATEGORIES, STATUS_COLORS } from './types';
-import { initialDevices } from './data/devices';
 import { useNetworkSimulation } from './hooks/useNetworkSimulation';
 import DeviceNode from './components/DeviceNode';
 import AnimatedEdge from './components/AnimatedEdge';
 import Sidebar from './components/Sidebar';
 import DevicePanel from './components/DevicePanel';
 import DeviceModal from './components/DeviceModal';
+import WelcomeScreen from './components/WelcomeScreen';
+
+const LS_KEY = 'hv-devices';
 
 const nodeTypes = { deviceNode: DeviceNode };
 const edgeTypes = { animatedEdge: AnimatedEdge };
@@ -124,7 +126,13 @@ function layoutByGroup(
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [devices, setDevices] = useState<Device[]>(initialDevices);
+  const [devices, setDevices] = useState<Device[]>(() => {
+    try {
+      const stored = localStorage.getItem(LS_KEY);
+      if (stored) return JSON.parse(stored) as Device[];
+    } catch { /* ignore parse errors */ }
+    return [];
+  });
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [sortMode, setSortMode] = useState<SortMode>('status');
   const [filterRooms, setFilterRooms] = useState<string[]>([]);
@@ -132,6 +140,20 @@ export default function App() {
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>();
   const [editingDevice, setEditingDevice] = useState<Device | null | undefined>(undefined);
+  const [showImport, setShowImport] = useState(false);
+
+  // Persist to localStorage whenever devices change
+  useEffect(() => {
+    if (devices.length > 0) {
+      localStorage.setItem(LS_KEY, JSON.stringify(devices));
+    }
+  }, [devices]);
+
+  const handleImport = (imported: Device[]) => {
+    setDevices(imported);
+    setShowImport(false);
+    setSelectedDeviceId(undefined);
+  };
 
   useNetworkSimulation(devices, setDevices, animationsEnabled);
 
@@ -279,6 +301,10 @@ export default function App() {
     .filter(d => d.status === 'active')
     .reduce((s, d) => s + (d.bandwidth ?? 0), 0);
 
+  if (devices.length === 0 || showImport) {
+    return <WelcomeScreen onImport={handleImport} />;
+  }
+
   return (
     <div className="app">
       <Sidebar
@@ -337,6 +363,9 @@ export default function App() {
               )
             )}
           </div>
+          <button className="rescan-btn" onClick={() => setShowImport(true)} title="Import a new network scan">
+            ↺ Re-import Scan
+          </button>
         </div>
 
         <div className="graph-container">

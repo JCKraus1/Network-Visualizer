@@ -650,3 +650,216 @@ code { font-family: 'Menlo', 'Consolas', monospace; background: #1e293b; padding
   background: #334155 !important;
 }
 .react-flow__minimap-mask { fill: rgba(0,0,0,0.5) !important; }
+
+/* ─── Welcome / Import Screen ─────────────────────────── */
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0a0f1e;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 200;
+}
+
+.welcome-box {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 20px;
+  padding: 36px 40px;
+  width: 100%;
+  max-width: 560px;
+  box-shadow: 0 30px 80px rgba(0,0,0,0.6);
+}
+
+.welcome-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+.welcome-logo h1 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 12px 0 6px;
+}
+.welcome-logo p {
+  font-size: 13px;
+  color: #64748b;
+}
+
+.welcome-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.welcome-step {
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+.step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0ea5e9;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.welcome-step strong {
+  font-size: 14px;
+  color: #e2e8f0;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.step-code {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  color: #94a3b8;
+}
+.step-code code {
+  font-size: 12px;
+  color: #7dd3fc;
+  background: none;
+  padding: 0;
+}
+.step-note {
+  font-size: 11px;
+  color: #64748b;
+  line-height: 1.5;
+}
+.step-note code {
+  background: #1e293b;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: #7dd3fc;
+}
+
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.import-or {
+  font-size: 12px;
+  color: #475569;
+}
+
+.import-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #e2e8f0;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.import-btn:hover { background: #334155; }
+.import-btn.primary {
+  background: #0ea5e9;
+  border-color: #0ea5e9;
+  color: white;
+  margin-top: 10px;
+}
+.import-btn.primary:hover { background: #0284c7; }
+
+.paste-area {
+  width: 100%;
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  color: #e2e8f0;
+  font-family: 'Menlo', 'Consolas', monospace;
+  font-size: 11px;
+  padding: 10px 12px;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.paste-area:focus { border-color: #0ea5e9; }
+.paste-area::placeholder { color: #475569; }
+
+.import-error {
+  margin-top: 8px;
+  padding: 8px 12px;
+  background: #450a0a;
+  border: 1px solid #7f1d1d;
+  border-radius: 6px;
+  color: #fca5a5;
+  font-size: 12px;
+}
+
+.welcome-divider {
+  text-align: center;
+  color: #334155;
+  font-size: 12px;
+  margin: 24px 0;
+  position: relative;
+}
+.welcome-divider::before,
+.welcome-divider::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: 44%;
+  height: 1px;
+  background: #1e293b;
+}
+.welcome-divider::before { left: 0; }
+.welcome-divider::after { right: 0; }
+
+.demo-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.demo-btn:hover { background: #334155; color: #e2e8f0; }
+
+/* ─── Re-import button in topbar ─────────────────────── */
+.rescan-btn {
+  margin-left: 8px;
+  padding: 6px 12px;
+  border-radius: 7px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.rescan-btn:hover { background: #334155; color: #e2e8f0; }
