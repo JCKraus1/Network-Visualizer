@@ -30,66 +30,46 @@ function AnimatedEdge({
     targetX, targetY, targetPosition,
   });
 
-  const strokeWidth = isOffline ? 0.8 : isActive ? Math.min(3, 1 + bw / 100) : 1;
+  const strokeWidth = isOffline ? 0.8 : isActive ? Math.min(2.5, 1 + bw / 120) : 1;
   const strokeColor = isOffline ? '#111c2e' : isActive ? color : '#0d1f36';
-  const animDur = isActive ? Math.max(0.7, 2.5 - bw / 100) : 2;
-
-  // Glowing edge line via CSS drop-shadow
-  const edgeFilter = isActive && !isOffline
-    ? `drop-shadow(0 0 3px ${color}88)`
-    : 'none';
+  const animDur = isActive ? Math.max(0.8, 2.5 - bw / 100) : 2;
+  const edgeFilter = isActive && !isOffline ? `drop-shadow(0 0 2px ${color}66)` : 'none';
 
   return (
     <>
-      {/* Base edge line */}
       <BaseEdge
         id={id}
         path={edgePath}
         style={{
           stroke: strokeColor,
           strokeWidth,
-          opacity: isOffline ? 0.2 : isWireless ? 0.6 : 0.85,
+          opacity: isOffline ? 0.2 : isWireless ? 0.55 : 0.8,
           strokeDasharray: isWireless && !isOffline ? '9 7' : undefined,
           filter: edgeFilter,
           transition: 'stroke 0.5s, stroke-width 0.5s',
         }}
       />
 
-      {/* ── Wired: 3 glowing orb trains ────────────────── */}
+      {/* ── Wired: 2 orb trains (lead + tail) ──────────── */}
       {showParticles && !isWireless && (
         <>
-          {[0, 0.34, 0.67].map((offset) => {
+          {[0, 0.5].map((offset) => {
             const begin = `${-(offset * animDur)}s`;
+            const beginTail = `${-(offset * animDur + 0.12)}s`;
             return (
               <g key={offset}>
-                {/* Lead orb — bright, large, full glow */}
                 <circle
-                  r={4.5}
+                  r={4}
                   fill={color}
                   opacity={0}
-                  style={{ filter: `drop-shadow(0 0 7px ${color}) drop-shadow(0 0 14px ${color}88)` }}
+                  style={{ filter: `drop-shadow(0 0 6px ${color})` }}
                 >
                   <animateMotion dur={`${animDur}s`} repeatCount="indefinite" begin={begin} path={edgePath} calcMode="linear" />
-                  <animate attributeName="opacity" values="0;0.95;0.95;0" keyTimes="0;0.05;0.92;1" dur={`${animDur}s`} repeatCount="indefinite" begin={begin} />
+                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.06;0.9;1" dur={`${animDur}s`} repeatCount="indefinite" begin={begin} />
                 </circle>
-                {/* Mid trail — softer */}
-                <circle
-                  r={3}
-                  fill={color}
-                  opacity={0}
-                  style={{ filter: `drop-shadow(0 0 4px ${color}99)` }}
-                >
-                  <animateMotion dur={`${animDur}s`} repeatCount="indefinite" begin={`${-(offset * animDur + 0.09)}s`} path={edgePath} calcMode="linear" />
-                  <animate attributeName="opacity" values="0;0.55;0.55;0" keyTimes="0;0.05;0.92;1" dur={`${animDur}s`} repeatCount="indefinite" begin={`${-(offset * animDur + 0.09)}s`} />
-                </circle>
-                {/* Tail — dim */}
-                <circle
-                  r={1.8}
-                  fill={color}
-                  opacity={0}
-                >
-                  <animateMotion dur={`${animDur}s`} repeatCount="indefinite" begin={`${-(offset * animDur + 0.18)}s`} path={edgePath} calcMode="linear" />
-                  <animate attributeName="opacity" values="0;0.25;0.25;0" keyTimes="0;0.05;0.92;1" dur={`${animDur}s`} repeatCount="indefinite" begin={`${-(offset * animDur + 0.18)}s`} />
+                <circle r={1.8} fill={color} opacity={0}>
+                  <animateMotion dur={`${animDur}s`} repeatCount="indefinite" begin={beginTail} path={edgePath} calcMode="linear" />
+                  <animate attributeName="opacity" values="0;0.3;0.3;0" keyTimes="0;0.06;0.9;1" dur={`${animDur}s`} repeatCount="indefinite" begin={beginTail} />
                 </circle>
               </g>
             );
@@ -97,37 +77,22 @@ function AnimatedEdge({
         </>
       )}
 
-      {/* ── Wireless: expanding ring pulses ────────────── */}
+      {/* ── Wireless: 2 expanding ring pulses ──────────── */}
       {showParticles && isWireless && (
         <>
-          {[0, 0.5, 1.0].map((offset) => {
+          {[0, 0.6].map((offset) => {
             const dur = animDur * 2;
             const begin = `${-(offset * dur)}s`;
             return (
               <g key={offset}>
-                {/* Expanding ring */}
-                <circle
-                  r={0}
-                  fill="none"
-                  stroke={color}
-                  strokeWidth={1.2}
-                  opacity={0}
-                  style={{ filter: `drop-shadow(0 0 4px ${color}88)` }}
-                >
+                <circle r={0} fill="none" stroke={color} strokeWidth={1.2} opacity={0}>
                   <animateMotion dur={`${dur}s`} repeatCount="indefinite" begin={begin} path={edgePath} calcMode="linear" />
-                  <animate attributeName="r" values="1;9;1" keyTimes="0;0.5;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
-                  <animate attributeName="opacity" values="0;0.8;0" keyTimes="0;0.25;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
-                  <animate attributeName="stroke-width" values="2;0.5;0" keyTimes="0;0.7;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
+                  <animate attributeName="r" values="1;8;1" keyTimes="0;0.5;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
+                  <animate attributeName="opacity" values="0;0.7;0" keyTimes="0;0.25;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
                 </circle>
-                {/* Center dot */}
-                <circle
-                  r={2.5}
-                  fill={color}
-                  opacity={0}
-                  style={{ filter: `drop-shadow(0 0 5px ${color})` }}
-                >
+                <circle r={2.5} fill={color} opacity={0}>
                   <animateMotion dur={`${dur}s`} repeatCount="indefinite" begin={begin} path={edgePath} calcMode="linear" />
-                  <animate attributeName="opacity" values="0;0.9;0.9;0" keyTimes="0;0.08;0.85;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
+                  <animate attributeName="opacity" values="0;0.85;0.85;0" keyTimes="0;0.08;0.85;1" dur={`${dur}s`} repeatCount="indefinite" begin={begin} />
                 </circle>
               </g>
             );

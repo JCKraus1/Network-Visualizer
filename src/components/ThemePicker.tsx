@@ -5,19 +5,26 @@ export default function ThemePicker() {
   const { themeName, setTheme } = useTheme();
   return (
     <div className="theme-picker">
-      <div className="theme-picker-label">Theme</div>
-      <div className="theme-swatches">
+      <div className="theme-list">
         {THEME_NAMES.map(name => {
           const t = THEMES[name];
           const active = name === themeName;
           return (
             <button
               key={name}
-              className={`theme-swatch${active ? ' active' : ''}`}
-              style={{ background: t.primary, boxShadow: active ? `0 0 0 2px #fff, 0 0 0 4px ${t.primary}` : undefined }}
+              className={`theme-item${active ? ' active' : ''}`}
+              style={active ? {
+                background: `${t.primary}14`,
+                borderColor: `${t.primary}55`,
+                color: t.primary,
+              } : undefined}
               onClick={() => setTheme(name)}
-              title={`${t.emoji} ${t.label} — ${t.desc}`}
-            />
+              title={t.desc}
+            >
+              <span className="theme-dot" style={{ background: t.primary }} />
+              <span className="theme-name">{t.emoji} {t.label}</span>
+              {active && <span className="theme-check">✓</span>}
+            </button>
           );
         })}
       </div>
