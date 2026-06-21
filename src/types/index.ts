@@ -63,6 +63,7 @@ export interface Device {
   bandwidth?: number;
   signalStrength?: number;
   hidden?: boolean;
+  connectionType?: 'wifi' | 'ethernet';
 }
 
 export const DEVICE_CATEGORIES: Record<DeviceCategory, { label: string; color: string; bg: string }> = {

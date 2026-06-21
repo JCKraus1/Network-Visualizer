@@ -137,6 +137,7 @@ export default function Sidebar({
         </div>
       </div>
 
+      <div className="sidebar-content">
       <Section title="View Mode">
         <div className="view-tabs">
           {(['topology', 'by-room', 'by-type'] as ViewMode[]).map(v => (
@@ -290,6 +291,7 @@ export default function Sidebar({
         )}
       </Section>
 
+      </div>{/* end sidebar-content */}
       <div className="sidebar-footer">
         <button className="add-device-btn" onClick={onAddDevice}>
           <Plus size={16} />

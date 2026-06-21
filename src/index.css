@@ -72,6 +72,18 @@ body {
 .stat-val { font-size: 20px; font-weight: 700; color: #f1f5f9; line-height: 1; }
 .stat-lbl { font-size: 11px; color: #64748b; text-transform: uppercase; margin-top: 2px; }
 
+/* Scrollable middle area — header and footer stay pinned */
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+}
+.sidebar-content::-webkit-scrollbar { width: 4px; }
+.sidebar-content::-webkit-scrollbar-track { background: transparent; }
+.sidebar-content::-webkit-scrollbar-thumb { background: #1e293b; border-radius: 2px; }
+.sidebar-content::-webkit-scrollbar-thumb:hover { background: #334155; }
+
 .sidebar-section {
   border-bottom: 1px solid #1e293b;
 }
@@ -173,8 +185,8 @@ body {
 }
 .toggle.on .toggle-knob { transform: translateX(16px); }
 
-/* Device list */
-.device-list { display: flex; flex-direction: column; gap: 2px; max-height: 300px; overflow-y: auto; }
+/* Device list — no max-height since sidebar-content scrolls */
+.device-list { display: flex; flex-direction: column; gap: 2px; }
 .device-list::-webkit-scrollbar { width: 4px; }
 .device-list::-webkit-scrollbar-track { background: transparent; }
 .device-list::-webkit-scrollbar-thumb { background: #334155; border-radius: 2px; }
@@ -426,6 +438,21 @@ body {
   font-size: 9px;
   font-weight: 700;
   margin-left: 4px;
+}
+
+/* Connection type badge — top-right corner of node */
+.dn-conn-badge {
+  position: absolute;
+  top: 9px;
+  right: 7px;
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  border: 1px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
 }
 
 /* React Flow handles */
@@ -1033,3 +1060,30 @@ code { font-family: 'Menlo', 'Consolas', monospace; background: #1e293b; padding
   flex-shrink: 0;
 }
 .room-delete-btn:hover { color: #ef4444; }
+
+/* ─── Connection type radio row in modal ──────────────── */
+.conn-type-row {
+  display: flex;
+  gap: 8px;
+}
+
+.conn-type-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+  background: #1e293b;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  user-select: none;
+}
+.conn-type-btn input[type="radio"] { display: none; }
+.conn-type-btn:hover { border-color: #475569; color: #94a3b8; }
+.conn-type-btn.active { border-color: #0ea5e9; color: #e2e8f0; background: #0c2d48; }

@@ -105,6 +105,7 @@ export default function DeviceModal({ device, allDevices, rooms, onSave, onClose
       brand: form.brand,
       model: form.model,
       bandwidth: form.bandwidth ?? 0,
+      connectionType: form.connectionType,
     });
   };
 
@@ -203,6 +204,34 @@ export default function DeviceModal({ device, allDevices, rooms, onSave, onClose
               onChange={e => set('mac', e.target.value)}
               placeholder="AA:BB:CC:DD:EE:FF"
             />
+          </div>
+
+          <div className="form-group">
+            <label>Connection Type</label>
+            <div className="conn-type-row">
+              {(['wifi', 'ethernet'] as const).map(ct => (
+                <label key={ct} className={`conn-type-btn ${form.connectionType === ct ? 'active' : ''}`}>
+                  <input
+                    type="radio"
+                    name="connectionType"
+                    value={ct}
+                    checked={form.connectionType === ct}
+                    onChange={() => set('connectionType', ct)}
+                  />
+                  {ct === 'wifi' ? '📶 WiFi' : '🔌 Ethernet'}
+                </label>
+              ))}
+              <label className={`conn-type-btn ${!form.connectionType ? 'active' : ''}`}>
+                <input
+                  type="radio"
+                  name="connectionType"
+                  value=""
+                  checked={!form.connectionType}
+                  onChange={() => set('connectionType', undefined)}
+                />
+                Unknown
+              </label>
+            </div>
           </div>
 
           {potentialParents.length > 0 && (

@@ -5,14 +5,13 @@ import {
   Router, Wifi, Monitor, Laptop, Server, HardDrive,
   Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
-  GitBranch, Cpu, Zap,
+  GitBranch, Cpu, Zap, Network,
   Watch, Plug, Lock, Bell, Box, Music2, Film,
   Phone, Glasses, Gamepad2 as GameController,
 } from 'lucide-react';
 import type { Device, DeviceType } from '../types';
 import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
 
-// Map device types to lucide icons
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string; strokeWidth?: number }>> = {
   'router':           Router,
   'switch':           GitBranch,
@@ -51,7 +50,6 @@ const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string; st
   'game-controller':  GameController,
 };
 
-// Emoji fallback badge per type — gives instant visual recognition
 const TYPE_EMOJI: Partial<Record<DeviceType, string>> = {
   'router':           '📡',
   'switch':           '🔀',
@@ -103,6 +101,7 @@ function DeviceNode({ data, selected }: NodeProps) {
   const isActive = device.status === 'active';
   const isOffline = device.status === 'offline';
   const isNetwork = device.category === 'network';
+  const connType = device.connectionType;
 
   const nodeStyle: React.CSSProperties = {
     borderColor: selected ? '#f8fafc' : isActive ? cat.color : '#334155',
@@ -114,15 +113,29 @@ function DeviceNode({ data, selected }: NodeProps) {
     <div className={`dn-card ${isActive ? 'dn-active' : ''} ${isNetwork ? 'dn-network' : ''}`} style={nodeStyle}>
       <Handle type="target" position={Position.Top} className="dn-handle" style={{ background: cat.color }} />
 
-      {/* Pulse ring on active */}
       {isActive && (
         <div className="dn-pulse" style={{ borderColor: cat.color }} />
       )}
 
-      {/* Colored top bar */}
       <div className="dn-topbar" style={{ background: cat.color }} />
 
-      {/* Icon area */}
+      {/* Connection type badge — top-right corner */}
+      {connType && (
+        <div
+          className="dn-conn-badge"
+          title={connType === 'wifi' ? 'WiFi' : 'Ethernet'}
+          style={{
+            background: connType === 'wifi' ? '#0c4a6e' : '#1c1917',
+            borderColor: connType === 'wifi' ? '#38bdf8' : '#a16207',
+            color: connType === 'wifi' ? '#38bdf8' : '#fbbf24',
+          }}
+        >
+          {connType === 'wifi'
+            ? <Wifi size={9} strokeWidth={2.5} />
+            : <Network size={9} strokeWidth={2.5} />}
+        </div>
+      )}
+
       <div
         className="dn-icon-wrap"
         style={{
@@ -143,14 +156,12 @@ function DeviceNode({ data, selected }: NodeProps) {
         />
       </div>
 
-      {/* Text */}
       <div className="dn-text">
         <div className="dn-name" title={device.name}>{device.name}</div>
         <div className="dn-type">{device.type.replace(/-/g, ' ')}</div>
         {device.brand && <div className="dn-brand">{device.brand}</div>}
       </div>
 
-      {/* Status pill */}
       <div className="dn-status-row">
         <span className="dn-dot" style={{ background: statusColor }} />
         <span className="dn-status-label" style={{ color: statusColor }}>

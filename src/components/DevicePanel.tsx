@@ -2,7 +2,7 @@ import {
   Router, GitBranch, Wifi, Monitor, Laptop, Server, HardDrive,
   Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
-  X, Signal, Zap, Globe,
+  X, Signal, Zap, Globe, Network,
   Watch, Plug, Lock, Bell, Box, Music2, Film,
   Phone, Glasses, Cpu, Gamepad2 as GameController,
 } from 'lucide-react';
@@ -82,6 +82,16 @@ export default function DevicePanel({ device, allDevices, onClose, onEdit, onHid
         )}
         {device.mac && (
           <div className="panel-row"><span>MAC</span><code style={{ fontSize: 11 }}>{device.mac}</code></div>
+        )}
+        {device.connectionType && (
+          <div className="panel-row">
+            <span>Connection</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+              {device.connectionType === 'wifi'
+                ? <><Wifi size={11} color="#38bdf8" /> <span style={{ color: '#38bdf8' }}>WiFi</span></>
+                : <><Network size={11} color="#fbbf24" /> <span style={{ color: '#fbbf24' }}>Ethernet</span></>}
+            </span>
+          </div>
         )}
         {device.signalStrength !== undefined && (
           <div className="panel-row">

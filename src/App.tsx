@@ -280,7 +280,7 @@ export default function App() {
             alignItems: 'flex-start',
             justifyContent: 'flex-start',
           },
-          draggable: false,
+          draggable: true,
           selectable: false,
         };
       });
@@ -308,7 +308,7 @@ export default function App() {
             letterSpacing: '0.05em',
             textTransform: 'uppercase' as const,
           },
-          draggable: false,
+          draggable: true,
           selectable: false,
         };
       });
@@ -339,6 +339,7 @@ export default function App() {
             : parent?.status === 'active' || d.status === 'active'
             ? 'active'
             : d.status;
+        const isWireless = d.connectionType === 'wifi' || d.room === 'WiFi Zone';
         rfEdges.push({
           id: `${pid}-${d.id}`,
           source: pid,
@@ -349,6 +350,7 @@ export default function App() {
             bandwidth: d.bandwidth,
             color: cat.color,
             animationsEnabled,
+            isWireless,
           } as unknown as Record<string, unknown>,
         });
       });
