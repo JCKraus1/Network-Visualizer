@@ -1,6 +1,6 @@
 import {
-  Router, Network, Wifi, Monitor, Laptop, Server, HardDrive,
-  Smartphone, Tablet, Tv, Cast, Gamepad2, Speaker,
+  Router, GitBranch, Wifi, Monitor, Laptop, Server, HardDrive,
+  Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
   X, Signal, Zap, Globe,
 } from 'lucide-react';
@@ -8,10 +8,10 @@ import type { Device, DeviceType } from '../types';
 import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
 
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>> = {
-  'router': Router, 'switch': Network, 'access-point': Wifi, 'mesh-node': Wifi,
+  'router': Router, 'switch': GitBranch, 'access-point': Wifi, 'mesh-node': Wifi,
   'desktop': Monitor, 'laptop': Laptop, 'server': Server, 'nas': HardDrive,
   'phone': Smartphone, 'tablet': Tablet, 'tv': Tv, 'streaming-stick': Cast,
-  'gaming-console': Gamepad2, 'smart-speaker': Speaker, 'smart-display': Tablet,
+  'gaming-console': Gamepad2, 'smart-speaker': Volume2, 'smart-display': Tablet,
   'iot-camera': Camera, 'iot-light': Lightbulb, 'iot-thermostat': Thermometer,
   'iot-sensor': Radio, 'iot-appliance': Home, 'printer': Printer,
 };

@@ -1,18 +1,18 @@
 import {
-  Router, Network, Wifi, Monitor, Laptop, Server, HardDrive,
-  Smartphone, Tablet, Tv, Cast, Gamepad2, Speaker,
+  Router, GitBranch, Wifi, Monitor, Laptop, Server, HardDrive,
+  Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
-  Plus, ChevronDown, ChevronRight,
+  Plus, ChevronDown, ChevronRight, Globe,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Device, DeviceType, DeviceCategory, ViewMode, SortMode } from '../types';
 import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
 
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>> = {
-  'router': Router, 'switch': Network, 'access-point': Wifi, 'mesh-node': Wifi,
+  'router': Router, 'switch': GitBranch, 'access-point': Wifi, 'mesh-node': Wifi,
   'desktop': Monitor, 'laptop': Laptop, 'server': Server, 'nas': HardDrive,
   'phone': Smartphone, 'tablet': Tablet, 'tv': Tv, 'streaming-stick': Cast,
-  'gaming-console': Gamepad2, 'smart-speaker': Speaker, 'smart-display': Tablet,
+  'gaming-console': Gamepad2, 'smart-speaker': Volume2, 'smart-display': Tablet,
   'iot-camera': Camera, 'iot-light': Lightbulb, 'iot-thermostat': Thermometer,
   'iot-sensor': Radio, 'iot-appliance': Home, 'printer': Printer,
 };
@@ -85,7 +85,7 @@ export default function Sidebar({
     <aside className="sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <Network size={20} color="#06b6d4" />
+          <Globe size={20} color="#06b6d4" />
           <span>Home Network</span>
         </div>
         <div className="sidebar-stats">
