@@ -3,6 +3,8 @@ import {
   Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
   X, Signal, Zap, Globe,
+  Watch, Plug, Lock, Bell, Box, Music2, Film,
+  Phone, Glasses, Cpu, Gamepad2 as GameController,
 } from 'lucide-react';
 import type { Device, DeviceType } from '../types';
 import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
@@ -14,6 +16,10 @@ const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>>
   'gaming-console': Gamepad2, 'smart-speaker': Volume2, 'smart-display': Tablet,
   'iot-camera': Camera, 'iot-light': Lightbulb, 'iot-thermostat': Thermometer,
   'iot-sensor': Radio, 'iot-appliance': Home, 'printer': Printer,
+  'smart-watch': Watch, 'smart-plug': Plug, 'smart-lock': Lock, 'doorbell': Bell,
+  'cable-box': Box, 'home-theater': Music2, 'projector': Film, 'workstation': Monitor,
+  'mesh-pod': Wifi, 'smart-hub': Cpu, 'voip-phone': Phone, 'vr-headset': Glasses,
+  'ev-charger': Zap, 'game-controller': GameController,
 };
 
 interface DevicePanelProps {
@@ -21,14 +27,22 @@ interface DevicePanelProps {
   allDevices: Device[];
   onClose: () => void;
   onEdit: (device: Device) => void;
+  onHide: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
-export default function DevicePanel({ device, allDevices, onClose, onEdit }: DevicePanelProps) {
+export default function DevicePanel({ device, allDevices, onClose, onEdit, onHide, onDelete }: DevicePanelProps) {
   const cat = DEVICE_CATEGORIES[device.category];
   const Icon = TYPE_ICONS[device.type] ?? Monitor;
   const statusColor = STATUS_COLORS[device.status];
   const parents = allDevices.filter(d => device.connectedTo.includes(d.id));
   const children = allDevices.filter(d => d.connectedTo.includes(device.id));
+
+  const handleDelete = () => {
+    if (window.confirm(`Delete "${device.name}"? This cannot be undone.`)) {
+      onDelete(device.id);
+    }
+  };
 
   return (
     <div className="device-panel">
@@ -115,6 +129,8 @@ export default function DevicePanel({ device, allDevices, onClose, onEdit }: Dev
       )}
 
       <button className="edit-btn" onClick={() => onEdit(device)}>Edit Device</button>
+      <button className="edit-btn hide-btn" onClick={() => onHide(device.id)}>Hide from Map</button>
+      <button className="edit-btn delete-btn" onClick={handleDelete}>Delete Device</button>
     </div>
   );
 }

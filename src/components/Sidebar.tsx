@@ -3,10 +3,12 @@ import {
   Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
   Plus, ChevronDown, ChevronRight, Globe,
+  Watch, Plug, Lock, Bell, Box, Music2, Film,
+  Phone, Glasses, Cpu, Zap, Gamepad2 as GameController,
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Device, DeviceType, DeviceCategory, ViewMode, SortMode } from '../types';
-import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
+import { DEVICE_CATEGORIES, ROOMS, STATUS_COLORS } from '../types';
 
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>> = {
   'router': Router, 'switch': GitBranch, 'access-point': Wifi, 'mesh-node': Wifi,
@@ -15,15 +17,21 @@ const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>>
   'gaming-console': Gamepad2, 'smart-speaker': Volume2, 'smart-display': Tablet,
   'iot-camera': Camera, 'iot-light': Lightbulb, 'iot-thermostat': Thermometer,
   'iot-sensor': Radio, 'iot-appliance': Home, 'printer': Printer,
+  'smart-watch': Watch, 'smart-plug': Plug, 'smart-lock': Lock, 'doorbell': Bell,
+  'cable-box': Box, 'home-theater': Music2, 'projector': Film, 'workstation': Monitor,
+  'mesh-pod': Wifi, 'smart-hub': Cpu, 'voip-phone': Phone, 'vr-headset': Glasses,
+  'ev-charger': Zap, 'game-controller': GameController,
 };
 
 interface SidebarProps {
   devices: Device[];
+  allDevices: Device[];
   viewMode: ViewMode;
   sortMode: SortMode;
   filterRooms: string[];
   filterCategories: DeviceCategory[];
   animationsEnabled: boolean;
+  rooms: string[];
   onViewMode: (v: ViewMode) => void;
   onSortMode: (s: SortMode) => void;
   onFilterRooms: (rooms: string[]) => void;
@@ -31,11 +39,15 @@ interface SidebarProps {
   onToggleAnimations: () => void;
   onAddDevice: () => void;
   onSelectDevice: (id: string) => void;
+  onShowDevice: (id: string) => void;
+  onAddRoom: (name: string) => void;
+  onDeleteRoom: (name: string) => void;
+  onDownload: () => void;
   selectedDeviceId?: string;
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  const [open, setOpen] = useState(true);
+function Section({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) {
+  const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="sidebar-section">
       <button className="section-toggle" onClick={() => setOpen(o => !o)}>
@@ -48,12 +60,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 export default function Sidebar({
-  devices, viewMode, sortMode, filterRooms, filterCategories, animationsEnabled,
-  onViewMode, onSortMode, onFilterRooms, onFilterCategories, onToggleAnimations,
-  onAddDevice, onSelectDevice, selectedDeviceId,
+  devices, allDevices, viewMode, sortMode, filterRooms, filterCategories, animationsEnabled,
+  rooms, onViewMode, onSortMode, onFilterRooms, onFilterCategories, onToggleAnimations,
+  onAddDevice, onSelectDevice, onShowDevice, onAddRoom, onDeleteRoom, onDownload,
+  selectedDeviceId,
 }: SidebarProps) {
   const onlineCount = devices.filter(d => d.status !== 'offline').length;
   const activeCount = devices.filter(d => d.status === 'active').length;
+  const [newRoomName, setNewRoomName] = useState('');
 
   const toggleRoom = (room: string) => {
     onFilterRooms(
@@ -76,10 +90,29 @@ export default function Sidebar({
     if (sortMode === 'bandwidth') return (b.bandwidth ?? 0) - (a.bandwidth ?? 0);
     if (sortMode === 'room') return a.room.localeCompare(b.room);
     if (sortMode === 'type') return a.type.localeCompare(b.type);
+    if (sortMode === 'ip') {
+      const aOcts = (a.ip || '').split('.').map(Number);
+      const bOcts = (b.ip || '').split('.').map(Number);
+      for (let i = 0; i < 4; i++) { if (aOcts[i] !== bOcts[i]) return aOcts[i] - bOcts[i]; }
+      return 0;
+    }
+    if (sortMode === 'mac') return (a.mac || '').localeCompare(b.mac || '');
     return 0;
   });
 
   const usedRooms = [...new Set(devices.map(d => d.room))];
+  const hiddenDevices = allDevices.filter(d => d.hidden === true);
+
+  // custom rooms = rooms not in built-in ROOMS list
+  const customRooms = rooms.filter(r => !ROOMS.includes(r));
+
+  const handleAddRoom = () => {
+    const trimmed = newRoomName.trim();
+    if (trimmed && !rooms.includes(trimmed)) {
+      onAddRoom(trimmed);
+      setNewRoomName('');
+    }
+  };
 
   return (
     <aside className="sidebar">
@@ -129,6 +162,8 @@ export default function Sidebar({
           <option value="bandwidth">Bandwidth</option>
           <option value="room">Room</option>
           <option value="type">Type</option>
+          <option value="ip">IP Address</option>
+          <option value="mac">MAC Address</option>
         </select>
       </Section>
 
@@ -205,10 +240,63 @@ export default function Sidebar({
         </div>
       </Section>
 
+      {hiddenDevices.length > 0 && (
+        <Section title={`Hidden Devices (${hiddenDevices.length})`} defaultOpen={false}>
+          <div className="device-list">
+            {hiddenDevices.map(device => {
+              const cat = DEVICE_CATEGORIES[device.category];
+              const Icon = TYPE_ICONS[device.type] ?? Monitor;
+              return (
+                <div key={device.id} className="hidden-device-item">
+                  <div className="dli-icon" style={{ background: cat.bg }}>
+                    <Icon size={14} color={cat.color} />
+                  </div>
+                  <div className="dli-info">
+                    <span className="dli-name">{device.name}</span>
+                    <span className="dli-room">{device.room}</span>
+                  </div>
+                  <button className="show-btn" onClick={() => onShowDevice(device.id)}>Show</button>
+                </div>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
+      <Section title="Manage Rooms" defaultOpen={false}>
+        <div className="add-room-row">
+          <input
+            type="text"
+            className="room-input"
+            placeholder="New room name..."
+            value={newRoomName}
+            onChange={e => setNewRoomName(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && handleAddRoom()}
+          />
+          <button className="add-room-btn" onClick={handleAddRoom}>Add</button>
+        </div>
+        {customRooms.length > 0 && (
+          <div className="room-list">
+            {customRooms.map(room => (
+              <div key={room} className="room-manage-item">
+                <span>{room}</span>
+                <button className="room-delete-btn" onClick={() => onDeleteRoom(room)}>×</button>
+              </div>
+            ))}
+          </div>
+        )}
+        {customRooms.length === 0 && (
+          <div style={{ fontSize: 11, color: '#475569', marginTop: 6 }}>No custom rooms yet.</div>
+        )}
+      </Section>
+
       <div className="sidebar-footer">
         <button className="add-device-btn" onClick={onAddDevice}>
           <Plus size={16} />
           Add Device
+        </button>
+        <button className="download-btn" onClick={onDownload}>
+          ↓ Export JSON
         </button>
       </div>
     </aside>

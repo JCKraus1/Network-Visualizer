@@ -1,14 +1,14 @@
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import {
   ReactFlow, Background, Controls, MiniMap,
   useNodesState, useEdgesState,
   BackgroundVariant,
 } from '@xyflow/react';
-import type { Node, Edge, NodeMouseHandler } from '@xyflow/react';
+import type { Node, Edge, NodeMouseHandler, OnNodeDrag } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import type { Device, DeviceCategory, ViewMode, SortMode } from './types';
-import { DEVICE_CATEGORIES, STATUS_COLORS } from './types';
+import { DEVICE_CATEGORIES, ROOMS, STATUS_COLORS } from './types';
 import { useNetworkSimulation } from './hooks/useNetworkSimulation';
 import DeviceNode from './components/DeviceNode';
 import AnimatedEdge from './components/AnimatedEdge';
@@ -18,6 +18,7 @@ import DeviceModal from './components/DeviceModal';
 import WelcomeScreen from './components/WelcomeScreen';
 
 const LS_KEY = 'hv-devices';
+const LS_ROOMS_KEY = 'hv-rooms';
 
 const nodeTypes = { deviceNode: DeviceNode };
 const edgeTypes = { animatedEdge: AnimatedEdge };
@@ -133,6 +134,17 @@ export default function App() {
     } catch { /* ignore parse errors */ }
     return [];
   });
+
+  const [customRooms, setCustomRooms] = useState<string[]>(() => {
+    try {
+      const stored = localStorage.getItem(LS_ROOMS_KEY);
+      if (stored) return JSON.parse(stored) as string[];
+    } catch { /* ignore */ }
+    return [];
+  });
+
+  const allRooms = useMemo(() => [...ROOMS, ...customRooms], [customRooms]);
+
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
   const [sortMode, setSortMode] = useState<SortMode>('status');
   const [filterRooms, setFilterRooms] = useState<string[]>([]);
@@ -149,21 +161,72 @@ export default function App() {
     }
   }, [devices]);
 
+  // Persist custom rooms
+  useEffect(() => {
+    localStorage.setItem(LS_ROOMS_KEY, JSON.stringify(customRooms));
+  }, [customRooms]);
+
+  const handleAddRoom = useCallback((name: string) => {
+    setCustomRooms(prev => prev.includes(name) ? prev : [...prev, name]);
+  }, []);
+
+  const handleDeleteRoom = useCallback((name: string) => {
+    setCustomRooms(prev => prev.filter(r => r !== name));
+  }, []);
+
   const handleImport = (imported: Device[]) => {
     setDevices(imported);
     setShowImport(false);
     setSelectedDeviceId(undefined);
   };
 
+  const handleToggleAnimations = useCallback(() => {
+    setAnimationsEnabled(prev => {
+      if (prev) {
+        // turning off — reset active devices to online
+        setDevices(d => d.map(dev => dev.status === 'active' ? { ...dev, status: 'online' } : dev));
+      }
+      return !prev;
+    });
+  }, []);
+
+  const handleDownloadJSON = useCallback(() => {
+    const blob = new Blob([JSON.stringify(devices, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'my-network.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [devices]);
+
+  const handleHideDevice = useCallback((id: string) => {
+    setDevices(prev => prev.map(d => d.id === id ? { ...d, hidden: true } : d));
+    setSelectedDeviceId(prev => prev === id ? undefined : prev);
+  }, []);
+
+  const handleShowDevice = useCallback((id: string) => {
+    setDevices(prev => prev.map(d => d.id === id ? { ...d, hidden: false } : d));
+  }, []);
+
+  const handleDeleteDevice = useCallback((id: string) => {
+    setDevices(prev => prev.filter(d => d.id !== id));
+    setSelectedDeviceId(prev => prev === id ? undefined : prev);
+  }, []);
+
   useNetworkSimulation(devices, setDevices, animationsEnabled);
 
   const visibleDevices = useMemo(() => {
     return devices.filter(d => {
+      if (d.hidden === true) return false;
       const roomOk = filterRooms.length === 0 || filterRooms.includes(d.room);
       const catOk = filterCategories.length === 0 || filterCategories.includes(d.category);
       return roomOk && catOk;
     });
   }, [devices, filterRooms, filterCategories]);
+
+  // Store group rects for drag-to-room feature
+  const groupRectsRef = useRef<Record<string, { x: number; y: number; w: number; h: number }>>({});
 
   const { rfNodes, rfEdges } = useMemo(() => {
     let positions: Map<string, { x: number; y: number }>;
@@ -174,31 +237,53 @@ export default function App() {
     } else if (viewMode === 'by-room') {
       const { nodePositions, groups } = layoutByGroup(visibleDevices, 'room');
       positions = nodePositions;
-      groupNodes = [...groups.entries()].map(([room, rect]) => ({
-        id: `group-room-${room}`,
-        type: 'default',
-        position: { x: rect.x - 12, y: rect.y - 12 },
-        data: { label: room },
-        style: {
-          width: rect.w + 24,
-          height: rect.h + 24,
-          background: 'rgba(15,23,42,0.8)',
-          border: '1px solid #1e293b',
-          borderRadius: 14,
-          zIndex: -1,
-          padding: '10px 14px',
-          fontSize: 13,
-          fontWeight: 700,
-          color: '#94a3b8',
-          letterSpacing: '0.05em',
-          textTransform: 'uppercase',
-          display: 'flex',
-          alignItems: 'flex-start',
-          justifyContent: 'flex-start',
-        },
-        draggable: false,
-        selectable: false,
-      }));
+
+      // Store rects for drag-to-room
+      const newRects: Record<string, { x: number; y: number; w: number; h: number }> = {};
+      groups.forEach((rect, room) => { newRects[room] = rect; });
+      groupRectsRef.current = newRects;
+
+      groupNodes = [...groups.entries()].map(([room, rect]) => {
+        const isWifi = room === 'WiFi Zone';
+        return {
+          id: `group-room-${room}`,
+          type: 'default',
+          position: { x: rect.x - 12, y: rect.y - 12 },
+          data: { label: isWifi ? '📶 WiFi Zone' : room },
+          style: isWifi ? {
+            width: rect.w + 24,
+            height: rect.h + 24,
+            background: 'radial-gradient(ellipse at 20% 40%, rgba(14,165,233,0.18) 0%, transparent 55%), radial-gradient(ellipse at 75% 25%, rgba(56,189,248,0.14) 0%, transparent 45%), radial-gradient(ellipse at 55% 80%, rgba(6,182,212,0.12) 0%, transparent 40%), #070e1c',
+            border: '2px dashed rgba(14,165,233,0.45)',
+            borderRadius: 20,
+            zIndex: -1,
+            padding: '10px 14px',
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#38bdf8',
+            letterSpacing: '0.06em',
+            textTransform: 'uppercase' as const,
+          } : {
+            width: rect.w + 24,
+            height: rect.h + 24,
+            background: 'rgba(15,23,42,0.8)',
+            border: '1px solid #1e293b',
+            borderRadius: 14,
+            zIndex: -1,
+            padding: '10px 14px',
+            fontSize: 13,
+            fontWeight: 700,
+            color: '#94a3b8',
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase' as const,
+            display: 'flex',
+            alignItems: 'flex-start',
+            justifyContent: 'flex-start',
+          },
+          draggable: false,
+          selectable: false,
+        };
+      });
     } else {
       const { nodePositions, groups } = layoutByGroup(visibleDevices, 'category');
       positions = nodePositions;
@@ -221,7 +306,7 @@ export default function App() {
             fontWeight: 700,
             color: catInfo?.color ?? '#94a3b8',
             letterSpacing: '0.05em',
-            textTransform: 'uppercase',
+            textTransform: 'uppercase' as const,
           },
           draggable: false,
           selectable: false,
@@ -263,16 +348,34 @@ export default function App() {
             status: edgeStatus,
             bandwidth: d.bandwidth,
             color: cat.color,
+            animationsEnabled,
           } as unknown as Record<string, unknown>,
         });
       });
     });
 
     return { rfNodes, rfEdges };
-  }, [visibleDevices, viewMode, selectedDeviceId, devices]);
+  }, [visibleDevices, viewMode, selectedDeviceId, devices, animationsEnabled]);
 
-  const [, , onNodesChange] = useNodesState(rfNodes);
-  const [, , onEdgesChange] = useEdgesState(rfEdges);
+  // Proper node/edge state with position preservation
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
+
+  const prevViewMode = useRef<ViewMode>(viewMode);
+
+  useEffect(() => {
+    const viewChanged = prevViewMode.current !== viewMode;
+    prevViewMode.current = viewMode;
+    setNodes(prevN =>
+      rfNodes.map(newNode => {
+        const existing = prevN.find(p => p.id === newNode.id);
+        return !viewChanged && existing
+          ? { ...newNode, position: existing.position }
+          : newNode;
+      })
+    );
+    setEdges(rfEdges);
+  }, [rfNodes, rfEdges, viewMode, setNodes, setEdges]);
 
   const onNodeClick: NodeMouseHandler = useCallback((_evt, node) => {
     if (node.type === 'deviceNode') {
@@ -281,6 +384,23 @@ export default function App() {
   }, []);
 
   const onPaneClick = useCallback(() => setSelectedDeviceId(undefined), []);
+
+  const handleNodeDragStop: OnNodeDrag = useCallback((_evt, node: Node) => {
+    if (node.type !== 'deviceNode' || viewMode !== 'by-room') return;
+    const rects = groupRectsRef.current;
+    for (const [room, rect] of Object.entries(rects)) {
+      const cx = node.position.x + 74;
+      const cy = node.position.y + 60;
+      // group node is positioned at rect.x-12, rect.y-12 with size rect.w+24, rect.h+24
+      if (
+        cx >= rect.x - 12 && cx <= rect.x + rect.w + 12 &&
+        cy >= rect.y - 12 && cy <= rect.y + rect.h + 12
+      ) {
+        setDevices(prev => prev.map(d => d.id === node.id ? { ...d, room } : d));
+        break;
+      }
+    }
+  }, [viewMode]);
 
   const selectedDevice = selectedDeviceId ? devices.find(d => d.id === selectedDeviceId) : undefined;
 
@@ -309,18 +429,24 @@ export default function App() {
     <div className="app">
       <Sidebar
         devices={visibleDevices}
+        allDevices={devices}
         viewMode={viewMode}
         sortMode={sortMode}
         filterRooms={filterRooms}
         filterCategories={filterCategories}
         animationsEnabled={animationsEnabled}
+        rooms={allRooms}
         onViewMode={setViewMode}
         onSortMode={setSortMode}
         onFilterRooms={setFilterRooms}
         onFilterCategories={setFilterCategories}
-        onToggleAnimations={() => setAnimationsEnabled(e => !e)}
+        onToggleAnimations={handleToggleAnimations}
         onAddDevice={() => setEditingDevice(null)}
         onSelectDevice={id => setSelectedDeviceId(prev => (prev === id ? undefined : id))}
+        onShowDevice={handleShowDevice}
+        onAddRoom={handleAddRoom}
+        onDeleteRoom={handleDeleteRoom}
+        onDownload={handleDownloadJSON}
         selectedDeviceId={selectedDeviceId}
       />
 
@@ -370,14 +496,15 @@ export default function App() {
 
         <div className="graph-container">
           <ReactFlow
-            nodes={rfNodes}
-            edges={rfEdges}
+            nodes={nodes}
+            edges={edges}
             onNodesChange={onNodesChange}
             onEdgesChange={onEdgesChange}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onNodeClick={onNodeClick}
             onPaneClick={onPaneClick}
+            onNodeDragStop={handleNodeDragStop}
             fitView
             fitViewOptions={{ padding: 0.2 }}
             minZoom={0.2}
@@ -404,6 +531,8 @@ export default function App() {
             allDevices={devices}
             onClose={() => setSelectedDeviceId(undefined)}
             onEdit={d => setEditingDevice(d)}
+            onHide={handleHideDevice}
+            onDelete={handleDeleteDevice}
           />
         )}
       </main>
@@ -412,6 +541,7 @@ export default function App() {
         <DeviceModal
           device={editingDevice}
           allDevices={devices}
+          rooms={allRooms}
           onSave={handleSaveDevice}
           onClose={() => setEditingDevice(undefined)}
         />

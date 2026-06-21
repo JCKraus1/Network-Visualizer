@@ -6,6 +6,8 @@ import {
   Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
   GitBranch, Cpu, Zap,
+  Watch, Plug, Lock, Bell, Box, Music2, Film,
+  Phone, Glasses, Gamepad2 as GameController,
 } from 'lucide-react';
 import type { Device, DeviceType } from '../types';
 import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
@@ -33,6 +35,20 @@ const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string; st
   'iot-sensor':       Radio,
   'iot-appliance':    Home,
   'printer':          Printer,
+  'smart-watch':      Watch,
+  'smart-plug':       Plug,
+  'smart-lock':       Lock,
+  'doorbell':         Bell,
+  'cable-box':        Box,
+  'home-theater':     Music2,
+  'projector':        Film,
+  'workstation':      Monitor,
+  'mesh-pod':         Wifi,
+  'smart-hub':        Cpu,
+  'voip-phone':       Phone,
+  'vr-headset':       Glasses,
+  'ev-charger':       Zap,
+  'game-controller':  GameController,
 };
 
 // Emoji fallback badge per type — gives instant visual recognition
@@ -57,6 +73,20 @@ const TYPE_EMOJI: Partial<Record<DeviceType, string>> = {
   'iot-sensor':       '📻',
   'iot-appliance':    '🏠',
   'printer':          '🖨️',
+  'smart-watch':      '⌚',
+  'smart-plug':       '🔌',
+  'smart-lock':       '🔒',
+  'doorbell':         '🔔',
+  'cable-box':        '📦',
+  'home-theater':     '🎵',
+  'projector':        '🎞️',
+  'workstation':      '🖥️',
+  'mesh-pod':         '📡',
+  'smart-hub':        '🔧',
+  'voip-phone':       '☎️',
+  'vr-headset':       '🥽',
+  'ev-charger':       '⚡',
+  'game-controller':  '🕹️',
 };
 
 export type DeviceNodeData = {

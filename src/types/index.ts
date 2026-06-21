@@ -19,7 +19,21 @@ export type DeviceType =
   | 'iot-thermostat'
   | 'iot-sensor'
   | 'iot-appliance'
-  | 'printer';
+  | 'printer'
+  | 'smart-watch'
+  | 'smart-plug'
+  | 'smart-lock'
+  | 'doorbell'
+  | 'cable-box'
+  | 'home-theater'
+  | 'projector'
+  | 'workstation'
+  | 'mesh-pod'
+  | 'smart-hub'
+  | 'voip-phone'
+  | 'vr-headset'
+  | 'ev-charger'
+  | 'game-controller';
 
 export type DeviceCategory =
   | 'network'
@@ -32,7 +46,7 @@ export type DeviceCategory =
 export type DeviceStatus = 'online' | 'offline' | 'idle' | 'active';
 
 export type ViewMode = 'topology' | 'by-room' | 'by-type';
-export type SortMode = 'name' | 'status' | 'bandwidth' | 'room' | 'type';
+export type SortMode = 'name' | 'status' | 'bandwidth' | 'room' | 'type' | 'ip' | 'mac';
 
 export interface Device {
   id: string;
@@ -48,6 +62,7 @@ export interface Device {
   model?: string;
   bandwidth?: number;
   signalStrength?: number;
+  hidden?: boolean;
 }
 
 export const DEVICE_CATEGORIES: Record<DeviceCategory, { label: string; color: string; bg: string }> = {
@@ -64,10 +79,19 @@ export const ROOMS = [
   'Living Room',
   'Kitchen',
   'Master Bedroom',
+  'Bedroom 2',
+  'Bedroom 3',
   'Office',
-  'Backyard',
+  'Game Room',
+  'Home Theater',
   'Garage',
-  'Guest Room',
+  'Backyard',
+  'Front Yard',
+  'Basement',
+  'Dining Room',
+  'Laundry Room',
+  'WiFi Zone',
+  'Unassigned',
 ];
 
 export const STATUS_COLORS: Record<DeviceStatus, string> = {

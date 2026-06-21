@@ -1,22 +1,30 @@
 import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import type { Device, DeviceType, DeviceCategory, DeviceStatus } from '../types';
-import { DEVICE_CATEGORIES, ROOMS } from '../types';
+import { DEVICE_CATEGORIES } from '../types';
 
 const DEVICE_TYPES: { type: DeviceType; label: string; category: DeviceCategory }[] = [
   { type: 'router', label: 'Router / Modem', category: 'network' },
   { type: 'switch', label: 'Network Switch', category: 'network' },
   { type: 'access-point', label: 'Access Point', category: 'network' },
   { type: 'mesh-node', label: 'Mesh Node', category: 'network' },
+  { type: 'mesh-pod', label: 'Mesh Pod', category: 'network' },
   { type: 'desktop', label: 'Desktop PC', category: 'computer' },
   { type: 'laptop', label: 'Laptop', category: 'computer' },
   { type: 'server', label: 'Server', category: 'computer' },
   { type: 'nas', label: 'NAS Storage', category: 'computer' },
+  { type: 'workstation', label: 'Workstation', category: 'computer' },
   { type: 'phone', label: 'Smartphone', category: 'mobile' },
   { type: 'tablet', label: 'Tablet', category: 'mobile' },
+  { type: 'smart-watch', label: 'Smart Watch', category: 'mobile' },
   { type: 'tv', label: 'Smart TV', category: 'entertainment' },
   { type: 'streaming-stick', label: 'Streaming Stick', category: 'entertainment' },
   { type: 'gaming-console', label: 'Gaming Console', category: 'entertainment' },
+  { type: 'cable-box', label: 'Cable/Satellite Box', category: 'entertainment' },
+  { type: 'home-theater', label: 'Home Theater System', category: 'entertainment' },
+  { type: 'projector', label: 'Projector', category: 'entertainment' },
+  { type: 'vr-headset', label: 'VR Headset', category: 'entertainment' },
+  { type: 'game-controller', label: 'Game Controller', category: 'entertainment' },
   { type: 'smart-speaker', label: 'Smart Speaker', category: 'smart-home' },
   { type: 'smart-display', label: 'Smart Display', category: 'smart-home' },
   { type: 'iot-camera', label: 'Security Camera', category: 'smart-home' },
@@ -24,12 +32,19 @@ const DEVICE_TYPES: { type: DeviceType; label: string; category: DeviceCategory 
   { type: 'iot-thermostat', label: 'Thermostat', category: 'smart-home' },
   { type: 'iot-sensor', label: 'IoT Sensor', category: 'smart-home' },
   { type: 'iot-appliance', label: 'Smart Appliance', category: 'smart-home' },
+  { type: 'smart-plug', label: 'Smart Plug', category: 'smart-home' },
+  { type: 'smart-lock', label: 'Smart Lock', category: 'smart-home' },
+  { type: 'doorbell', label: 'Video Doorbell', category: 'smart-home' },
+  { type: 'smart-hub', label: 'Smart Hub', category: 'smart-home' },
+  { type: 'ev-charger', label: 'EV Charger', category: 'smart-home' },
   { type: 'printer', label: 'Printer', category: 'peripheral' },
+  { type: 'voip-phone', label: 'VoIP Phone', category: 'peripheral' },
 ];
 
 interface DeviceModalProps {
   device?: Device | null;
   allDevices: Device[];
+  rooms: string[];
   onSave: (device: Device) => void;
   onClose: () => void;
 }
@@ -38,7 +53,7 @@ function generateId() {
   return `device-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
-export default function DeviceModal({ device, allDevices, onSave, onClose }: DeviceModalProps) {
+export default function DeviceModal({ device, allDevices, rooms, onSave, onClose }: DeviceModalProps) {
   const [form, setForm] = useState<Partial<Device>>({
     name: '',
     type: 'phone',
@@ -132,7 +147,7 @@ export default function DeviceModal({ device, allDevices, onSave, onClose }: Dev
             <div className="form-group">
               <label>Room *</label>
               <select value={form.room} onChange={e => set('room', e.target.value)}>
-                {ROOMS.map(r => <option key={r} value={r}>{r}</option>)}
+                {rooms.map(r => <option key={r} value={r}>{r}</option>)}
               </select>
             </div>
           </div>

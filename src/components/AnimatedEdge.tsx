@@ -7,6 +7,7 @@ export type AnimatedEdgeData = {
   status: DeviceStatus;
   bandwidth?: number;
   color?: string;
+  animationsEnabled?: boolean;
 };
 
 function AnimatedEdge({
@@ -20,6 +21,7 @@ function AnimatedEdge({
   const isOffline = d?.status === 'offline';
   const bw = d?.bandwidth ?? 0;
   const color = d?.color ?? '#3b82f6';
+  const showParticles = isActive && d?.animationsEnabled !== false;
 
   const [edgePath] = getBezierPath({
     sourceX, sourceY, sourcePosition,
@@ -43,7 +45,7 @@ function AnimatedEdge({
         }}
       />
 
-      {isActive && (
+      {showParticles && (
         <>
           {[0, 0.4, 0.8].map((offset, i) => (
             <circle key={i} r={i === 0 ? 4 : 3} fill={color} opacity={i === 0 ? 0.9 : 0.6}>
