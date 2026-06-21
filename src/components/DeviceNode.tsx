@@ -87,9 +87,7 @@ const TYPE_EMOJI: Partial<Record<DeviceType, string>> = {
   'game-controller':  '🕹️',
 };
 
-export type DeviceNodeData = {
-  device: Device;
-};
+export type DeviceNodeData = { device: Device };
 
 function DeviceNode({ data, selected }: NodeProps) {
   const d = data as unknown as DeviceNodeData;
@@ -103,31 +101,50 @@ function DeviceNode({ data, selected }: NodeProps) {
   const isNetwork = device.category === 'network';
   const connType = device.connectionType;
 
+  const borderColor = selected
+    ? 'rgba(255,255,255,0.6)'
+    : isActive
+    ? `${cat.color}66`
+    : 'rgba(0,212,255,0.1)';
+
   const nodeStyle: React.CSSProperties = {
-    borderColor: selected ? '#f8fafc' : isActive ? cat.color : '#334155',
-    borderWidth: selected ? 2 : 1,
-    opacity: isOffline ? 0.45 : 1,
+    borderColor,
+    borderWidth: selected ? 1.5 : 1,
+    opacity: isOffline ? 0.4 : 1,
   };
 
   return (
-    <div className={`dn-card ${isActive ? 'dn-active' : ''} ${isNetwork ? 'dn-network' : ''}`} style={nodeStyle}>
-      <Handle type="target" position={Position.Top} className="dn-handle" style={{ background: cat.color }} />
+    <div
+      className={`dn-card ${isActive ? 'dn-active' : ''} ${isNetwork ? 'dn-network' : ''}`}
+      style={nodeStyle}
+    >
+      <Handle
+        type="target"
+        position={Position.Top}
+        className="dn-handle"
+        style={{ background: cat.color, boxShadow: `0 0 8px ${cat.color}` }}
+      />
 
+      {/* Active pulse ring */}
       {isActive && (
-        <div className="dn-pulse" style={{ borderColor: cat.color }} />
+        <div className="dn-pulse" style={{ borderColor: `${cat.color}55` }} />
       )}
 
-      <div className="dn-topbar" style={{ background: cat.color }} />
+      {/* Category gradient top bar */}
+      <div
+        className="dn-topbar"
+        style={{ background: `linear-gradient(90deg, ${cat.color}, ${cat.color}66, transparent)` }}
+      />
 
-      {/* Connection type badge — top-right corner */}
+      {/* Connection type badge */}
       {connType && (
         <div
           className="dn-conn-badge"
           title={connType === 'wifi' ? 'WiFi' : 'Ethernet'}
           style={{
-            background: connType === 'wifi' ? '#0c4a6e' : '#1c1917',
-            borderColor: connType === 'wifi' ? '#38bdf8' : '#a16207',
-            color: connType === 'wifi' ? '#38bdf8' : '#fbbf24',
+            background: connType === 'wifi' ? 'rgba(0,36,64,0.9)' : 'rgba(20,16,0,0.9)',
+            borderColor: connType === 'wifi' ? 'rgba(0,212,255,0.5)' : 'rgba(255,215,0,0.4)',
+            color: connType === 'wifi' ? '#00d4ff' : '#ffd700',
           }}
         >
           {connType === 'wifi'
@@ -136,34 +153,44 @@ function DeviceNode({ data, selected }: NodeProps) {
         </div>
       )}
 
+      {/* Circular icon area */}
       <div
         className="dn-icon-wrap"
         style={{
           background: isOffline
-            ? 'rgba(55,65,81,0.4)'
-            : `linear-gradient(135deg, ${cat.bg} 0%, ${cat.color}22 100%)`,
-          borderColor: isOffline ? '#374151' : `${cat.color}55`,
-          boxShadow: isActive ? `0 0 14px ${cat.color}44` : 'none',
+            ? 'rgba(8,16,28,0.8)'
+            : `radial-gradient(circle, ${cat.bg} 0%, rgba(2,8,18,0.9) 100%)`,
+          borderColor: isOffline ? '#0d1f36' : `${cat.color}55`,
+          boxShadow: isOffline
+            ? 'none'
+            : isActive
+            ? `0 0 16px ${cat.color}55, inset 0 0 12px ${cat.color}22`
+            : `0 0 8px ${cat.color}22`,
         }}
       >
         <span className="dn-emoji" title={device.type.replace(/-/g, ' ')}>
           {emoji}
         </span>
         <Icon
-          size={18}
-          color={isOffline ? '#4b5563' : cat.color}
-          strokeWidth={1.8}
+          size={16}
+          color={isOffline ? '#1a2a3a' : cat.color}
+          strokeWidth={1.6}
         />
       </div>
 
+      {/* Text */}
       <div className="dn-text">
         <div className="dn-name" title={device.name}>{device.name}</div>
         <div className="dn-type">{device.type.replace(/-/g, ' ')}</div>
         {device.brand && <div className="dn-brand">{device.brand}</div>}
       </div>
 
+      {/* Status row */}
       <div className="dn-status-row">
-        <span className="dn-dot" style={{ background: statusColor }} />
+        <span
+          className="dn-dot"
+          style={{ background: statusColor, boxShadow: `0 0 6px ${statusColor}` }}
+        />
         <span className="dn-status-label" style={{ color: statusColor }}>
           {device.status}
         </span>
@@ -174,7 +201,12 @@ function DeviceNode({ data, selected }: NodeProps) {
         )}
       </div>
 
-      <Handle type="source" position={Position.Bottom} className="dn-handle" style={{ background: cat.color }} />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        className="dn-handle"
+        style={{ background: cat.color, boxShadow: `0 0 8px ${cat.color}` }}
+      />
     </div>
   );
 }

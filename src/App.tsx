@@ -281,28 +281,28 @@ export default function App() {
           style: isWifi ? {
             width: rect.w + 24,
             height: rect.h + 24,
-            background: 'radial-gradient(ellipse at 20% 40%, rgba(14,165,233,0.18) 0%, transparent 55%), radial-gradient(ellipse at 75% 25%, rgba(56,189,248,0.14) 0%, transparent 45%), radial-gradient(ellipse at 55% 80%, rgba(6,182,212,0.12) 0%, transparent 40%), #070e1c',
-            border: '2px dashed rgba(14,165,233,0.45)',
+            background: 'radial-gradient(ellipse at 20% 30%, rgba(0,212,255,0.1) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(0,100,255,0.08) 0%, transparent 45%), rgba(0,10,24,0.75)',
+            border: '1.5px dashed rgba(0,212,255,0.3)',
             borderRadius: 20,
             zIndex: -1,
             padding: '10px 14px',
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: 700,
-            color: '#38bdf8',
-            letterSpacing: '0.06em',
+            color: 'rgba(0,212,255,0.6)',
+            letterSpacing: '0.12em',
             textTransform: 'uppercase' as const,
           } : {
             width: rect.w + 24,
             height: rect.h + 24,
-            background: 'rgba(15,23,42,0.8)',
-            border: '1px solid #1e293b',
+            background: 'rgba(2,8,20,0.7)',
+            border: '1px solid rgba(0,212,255,0.08)',
             borderRadius: 14,
             zIndex: -1,
             padding: '10px 14px',
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: 700,
-            color: '#94a3b8',
-            letterSpacing: '0.05em',
+            color: 'rgba(0,212,255,0.35)',
+            letterSpacing: '0.12em',
             textTransform: 'uppercase' as const,
           },
           draggable: true,
@@ -332,15 +332,15 @@ export default function App() {
           style: {
             width: rect.w + 24,
             height: rect.h + 24,
-            background: catInfo ? `${catInfo.bg}cc` : 'rgba(15,23,42,0.8)',
-            border: `1px solid ${catInfo?.color ?? '#334155'}44`,
+            background: catInfo ? `${catInfo.bg}` : 'rgba(2,8,20,0.7)',
+            border: `1px solid ${catInfo?.color ?? 'rgba(0,212,255,0.08)'}33`,
             borderRadius: 14,
             zIndex: -1,
             padding: '10px 14px',
-            fontSize: 13,
+            fontSize: 11,
             fontWeight: 700,
-            color: catInfo?.color ?? '#94a3b8',
-            letterSpacing: '0.05em',
+            color: catInfo ? `${catInfo.color}88` : 'rgba(0,212,255,0.3)',
+            letterSpacing: '0.12em',
             textTransform: 'uppercase' as const,
           },
           draggable: true,
@@ -600,7 +600,7 @@ export default function App() {
             maxZoom={2}
             proOptions={{ hideAttribution: true }}
           >
-            <Background variant={BackgroundVariant.Dots} color="#1e293b" gap={24} size={1} />
+            <Background variant={BackgroundVariant.Lines} color="rgba(0,212,255,0.04)" gap={40} lineWidth={0.5} />
             <Controls style={{ background: '#1e293b', border: '1px solid #334155' }} />
             <MiniMap
               nodeColor={n => {

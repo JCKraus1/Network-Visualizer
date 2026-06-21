@@ -67,12 +67,12 @@ export interface Device {
 }
 
 export const DEVICE_CATEGORIES: Record<DeviceCategory, { label: string; color: string; bg: string }> = {
-  network: { label: 'Network', color: '#06b6d4', bg: '#164e63' },
-  computer: { label: 'Computers', color: '#3b82f6', bg: '#1e3a5f' },
-  mobile: { label: 'Mobile', color: '#a855f7', bg: '#3b0764' },
-  entertainment: { label: 'Entertainment', color: '#f97316', bg: '#431407' },
-  'smart-home': { label: 'Smart Home', color: '#22c55e', bg: '#14532d' },
-  peripheral: { label: 'Peripherals', color: '#eab308', bg: '#422006' },
+  network:       { label: 'Network',       color: '#00d4ff', bg: 'rgba(0,36,64,0.9)'  },
+  computer:      { label: 'Computers',     color: '#4d9fff', bg: 'rgba(0,20,58,0.9)'  },
+  mobile:        { label: 'Mobile',        color: '#c04dff', bg: 'rgba(28,0,60,0.9)'  },
+  entertainment: { label: 'Entertainment', color: '#ff6b35', bg: 'rgba(44,10,0,0.9)'  },
+  'smart-home':  { label: 'Smart Home',    color: '#00ff88', bg: 'rgba(0,36,18,0.9)'  },
+  peripheral:    { label: 'Peripherals',   color: '#ffd700', bg: 'rgba(40,28,0,0.9)'  },
 };
 
 export const ROOMS = [
@@ -96,8 +96,8 @@ export const ROOMS = [
 ];
 
 export const STATUS_COLORS: Record<DeviceStatus, string> = {
-  active: '#22c55e',
-  online: '#3b82f6',
-  idle: '#f59e0b',
-  offline: '#6b7280',
+  active:  '#00ff88',
+  online:  '#00d4ff',
+  idle:    '#ff9f1c',
+  offline: '#2a3d56',
 };
