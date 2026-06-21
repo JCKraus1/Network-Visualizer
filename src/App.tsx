@@ -19,6 +19,7 @@ import WelcomeScreen from './components/WelcomeScreen';
 
 const LS_KEY = 'hv-devices';
 const LS_ROOMS_KEY = 'hv-rooms';
+const LS_GROUP_POS_KEY = 'hv-group-positions';
 
 const nodeTypes = { deviceNode: DeviceNode };
 const edgeTypes = { animatedEdge: AnimatedEdge };
@@ -143,6 +144,20 @@ export default function App() {
     return [];
   });
 
+  const [groupPositions, setGroupPositions] = useState<Record<string, { x: number; y: number }>>(() => {
+    try {
+      const stored = localStorage.getItem(LS_GROUP_POS_KEY);
+      if (stored) return JSON.parse(stored) as Record<string, { x: number; y: number }>;
+    } catch { /* ignore */ }
+    return {};
+  });
+
+  // Stable refs so callbacks don't go stale
+  const groupPositionsRef = useRef<Record<string, { x: number; y: number }>>({});
+  const devicesRef = useRef<Device[]>([]);
+  useEffect(() => { groupPositionsRef.current = groupPositions; }, [groupPositions]);
+  useEffect(() => { devicesRef.current = devices; }, [devices]);
+
   const allRooms = useMemo(() => [...ROOMS, ...customRooms], [customRooms]);
 
   const [viewMode, setViewMode] = useState<ViewMode>('topology');
@@ -154,17 +169,17 @@ export default function App() {
   const [editingDevice, setEditingDevice] = useState<Device | null | undefined>(undefined);
   const [showImport, setShowImport] = useState(false);
 
-  // Persist to localStorage whenever devices change
   useEffect(() => {
-    if (devices.length > 0) {
-      localStorage.setItem(LS_KEY, JSON.stringify(devices));
-    }
+    if (devices.length > 0) localStorage.setItem(LS_KEY, JSON.stringify(devices));
   }, [devices]);
 
-  // Persist custom rooms
   useEffect(() => {
     localStorage.setItem(LS_ROOMS_KEY, JSON.stringify(customRooms));
   }, [customRooms]);
+
+  useEffect(() => {
+    localStorage.setItem(LS_GROUP_POS_KEY, JSON.stringify(groupPositions));
+  }, [groupPositions]);
 
   const handleAddRoom = useCallback((name: string) => {
     setCustomRooms(prev => prev.includes(name) ? prev : [...prev, name]);
@@ -183,7 +198,6 @@ export default function App() {
   const handleToggleAnimations = useCallback(() => {
     setAnimationsEnabled(prev => {
       if (prev) {
-        // turning off — reset active devices to online
         setDevices(d => d.map(dev => dev.status === 'active' ? { ...dev, status: 'online' } : dev));
       }
       return !prev;
@@ -225,12 +239,13 @@ export default function App() {
     });
   }, [devices, filterRooms, filterCategories]);
 
-  // Store group rects for drag-to-room feature
   const groupRectsRef = useRef<Record<string, { x: number; y: number; w: number; h: number }>>({});
 
   const { rfNodes, rfEdges } = useMemo(() => {
     let positions: Map<string, { x: number; y: number }>;
     let groupNodes: Node[] = [];
+    // Maps groupId → delta applied to devices in that group
+    const groupDeltas = new Map<string, { x: number; y: number }>();
 
     if (viewMode === 'topology') {
       positions = layoutTopology(visibleDevices);
@@ -238,17 +253,30 @@ export default function App() {
       const { nodePositions, groups } = layoutByGroup(visibleDevices, 'room');
       positions = nodePositions;
 
-      // Store rects for drag-to-room
+      // Build groupRectsRef using actual (stored) positions so drag-to-room works after moves
       const newRects: Record<string, { x: number; y: number; w: number; h: number }> = {};
-      groups.forEach((rect, room) => { newRects[room] = rect; });
-      groupRectsRef.current = newRects;
 
       groupNodes = [...groups.entries()].map(([room, rect]) => {
+        const groupId = `group-room-${room}`;
+        const defaultPos = { x: rect.x - 12, y: rect.y - 12 };
+        const storedPos = groupPositions[groupId];
+        const pos = storedPos ?? defaultPos;
+        const delta = { x: pos.x - defaultPos.x, y: pos.y - defaultPos.y };
+        groupDeltas.set(groupId, delta);
+
+        // Store actual rect for drag-to-room detection
+        newRects[room] = {
+          x: pos.x + 12,
+          y: pos.y + 12,
+          w: rect.w,
+          h: rect.h,
+        };
+
         const isWifi = room === 'WiFi Zone';
         return {
-          id: `group-room-${room}`,
+          id: groupId,
           type: 'default',
-          position: { x: rect.x - 12, y: rect.y - 12 },
+          position: pos,
           data: { label: isWifi ? '📶 WiFi Zone' : room },
           style: isWifi ? {
             width: rect.w + 24,
@@ -276,23 +304,30 @@ export default function App() {
             color: '#94a3b8',
             letterSpacing: '0.05em',
             textTransform: 'uppercase' as const,
-            display: 'flex',
-            alignItems: 'flex-start',
-            justifyContent: 'flex-start',
           },
           draggable: true,
           selectable: false,
         };
       });
+
+      groupRectsRef.current = newRects;
     } else {
       const { nodePositions, groups } = layoutByGroup(visibleDevices, 'category');
       positions = nodePositions;
+
       groupNodes = [...groups.entries()].map(([cat, rect]) => {
+        const groupId = `group-cat-${cat}`;
+        const defaultPos = { x: rect.x - 12, y: rect.y - 12 };
+        const storedPos = groupPositions[groupId];
+        const pos = storedPos ?? defaultPos;
+        const delta = { x: pos.x - defaultPos.x, y: pos.y - defaultPos.y };
+        groupDeltas.set(groupId, delta);
+
         const catInfo = DEVICE_CATEGORIES[cat as DeviceCategory];
         return {
-          id: `group-cat-${cat}`,
+          id: groupId,
           type: 'default',
-          position: { x: rect.x - 12, y: rect.y - 12 },
+          position: pos,
           data: { label: catInfo?.label ?? cat },
           style: {
             width: rect.w + 24,
@@ -318,13 +353,23 @@ export default function App() {
 
     const rfNodes: Node[] = [
       ...groupNodes,
-      ...visibleDevices.map(d => ({
-        id: d.id,
-        type: 'deviceNode',
-        position: positions.get(d.id) ?? { x: 0, y: 0 },
-        data: { device: d, selected: d.id === selectedDeviceId } as unknown as Record<string, unknown>,
-        selected: d.id === selectedDeviceId,
-      })),
+      ...visibleDevices.map(d => {
+        const layoutPos = positions.get(d.id) ?? { x: 0, y: 0 };
+        // Apply the group's stored position delta so devices follow their room
+        const groupId = viewMode === 'by-room'
+          ? `group-room-${d.room}`
+          : viewMode === 'by-type'
+          ? `group-cat-${d.category}`
+          : null;
+        const delta = groupId ? (groupDeltas.get(groupId) ?? { x: 0, y: 0 }) : { x: 0, y: 0 };
+        return {
+          id: d.id,
+          type: 'deviceNode',
+          position: { x: layoutPos.x + delta.x, y: layoutPos.y + delta.y },
+          data: { device: d, selected: d.id === selectedDeviceId } as unknown as Record<string, unknown>,
+          selected: d.id === selectedDeviceId,
+        };
+      }),
     ];
 
     const rfEdges: Edge[] = [];
@@ -357,9 +402,8 @@ export default function App() {
     });
 
     return { rfNodes, rfEdges };
-  }, [visibleDevices, viewMode, selectedDeviceId, devices, animationsEnabled]);
+  }, [visibleDevices, viewMode, selectedDeviceId, devices, animationsEnabled, groupPositions]);
 
-  // Proper node/edge state with position preservation
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
 
@@ -388,12 +432,55 @@ export default function App() {
   const onPaneClick = useCallback(() => setSelectedDeviceId(undefined), []);
 
   const handleNodeDragStop: OnNodeDrag = useCallback((_evt, node: Node) => {
+    const isGroup = node.id.startsWith('group-room-') || node.id.startsWith('group-cat-');
+
+    if (isGroup) {
+      const groupId = node.id;
+      const newPos = node.position;
+      const oldPos = groupPositionsRef.current[groupId];
+
+      // Shift all device nodes that belong to this group by the movement delta
+      if (oldPos) {
+        const dx = newPos.x - oldPos.x;
+        const dy = newPos.y - oldPos.y;
+        if (dx !== 0 || dy !== 0) {
+          setNodes(prevNodes => prevNodes.map(n => {
+            if (n.type !== 'deviceNode') return n;
+            const dev = devicesRef.current.find(d => d.id === n.id);
+            if (!dev) return n;
+            const devGroupId = groupId.startsWith('group-room-')
+              ? `group-room-${dev.room}`
+              : `group-cat-${dev.category}`;
+            if (devGroupId !== groupId) return n;
+            return { ...n, position: { x: n.position.x + dx, y: n.position.y + dy } };
+          }));
+        }
+      }
+
+      // Persist new group position
+      setGroupPositions(prev => ({ ...prev, [groupId]: newPos }));
+
+      // Update groupRectsRef so drag-to-room detection reflects the new position
+      if (groupId.startsWith('group-room-')) {
+        const room = groupId.slice('group-room-'.length);
+        const oldRect = groupRectsRef.current[room];
+        if (oldRect) {
+          groupRectsRef.current[room] = {
+            ...oldRect,
+            x: newPos.x + 12,
+            y: newPos.y + 12,
+          };
+        }
+      }
+      return;
+    }
+
+    // Device node drag — detect room from drop position (by-room only)
     if (node.type !== 'deviceNode' || viewMode !== 'by-room') return;
     const rects = groupRectsRef.current;
     for (const [room, rect] of Object.entries(rects)) {
       const cx = node.position.x + 74;
       const cy = node.position.y + 60;
-      // group node is positioned at rect.x-12, rect.y-12 with size rect.w+24, rect.h+24
       if (
         cx >= rect.x - 12 && cx <= rect.x + rect.w + 12 &&
         cy >= rect.y - 12 && cy <= rect.y + rect.h + 12
@@ -402,7 +489,7 @@ export default function App() {
         break;
       }
     }
-  }, [viewMode]);
+  }, [viewMode, setNodes]);
 
   const selectedDevice = selectedDeviceId ? devices.find(d => d.id === selectedDeviceId) : undefined;
 
