@@ -8,7 +8,8 @@ import type { Node, Edge, NodeMouseHandler, OnNodeDrag } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 
 import type { Device, DeviceCategory, ViewMode, SortMode } from './types';
-import { DEVICE_CATEGORIES, ROOMS, STATUS_COLORS } from './types';
+import { ROOMS } from './types';
+import { useTheme, useCategoryColors, useStatusColors } from './contexts/ThemeContext';
 import { useNetworkSimulation } from './hooks/useNetworkSimulation';
 import DeviceNode from './components/DeviceNode';
 import AnimatedEdge from './components/AnimatedEdge';
@@ -128,6 +129,10 @@ function layoutByGroup(
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const { theme } = useTheme();
+  const categoryColors = useCategoryColors();
+  const statusColors = useStatusColors();
+
   const [devices, setDevices] = useState<Device[]>(() => {
     try {
       const stored = localStorage.getItem(LS_KEY);
@@ -273,6 +278,7 @@ export default function App() {
         };
 
         const isWifi = room === 'WiFi Zone';
+        const neonPrimary = theme.cssVars['--neon-primary'] ?? '#00d4ff';
         return {
           id: groupId,
           type: 'default',
@@ -281,27 +287,27 @@ export default function App() {
           style: isWifi ? {
             width: rect.w + 24,
             height: rect.h + 24,
-            background: 'radial-gradient(ellipse at 20% 30%, rgba(0,212,255,0.1) 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, rgba(0,100,255,0.08) 0%, transparent 45%), rgba(0,10,24,0.75)',
-            border: '1.5px dashed rgba(0,212,255,0.3)',
+            background: `radial-gradient(ellipse at 20% 30%, ${neonPrimary}1a 0%, transparent 50%), radial-gradient(ellipse at 80% 70%, ${neonPrimary}14 0%, transparent 45%), var(--bg-dark, rgba(0,10,24,0.75))`,
+            border: `1.5px dashed ${neonPrimary}4d`,
             borderRadius: 20,
             zIndex: -1,
             padding: '10px 14px',
             fontSize: 11,
             fontWeight: 700,
-            color: 'rgba(0,212,255,0.6)',
+            color: `${neonPrimary}99`,
             letterSpacing: '0.12em',
             textTransform: 'uppercase' as const,
           } : {
             width: rect.w + 24,
             height: rect.h + 24,
-            background: 'rgba(2,8,20,0.7)',
-            border: '1px solid rgba(0,212,255,0.08)',
+            background: 'var(--bg-dark, rgba(2,8,20,0.7))',
+            border: `1px solid ${neonPrimary}14`,
             borderRadius: 14,
             zIndex: -1,
             padding: '10px 14px',
             fontSize: 11,
             fontWeight: 700,
-            color: 'rgba(0,212,255,0.35)',
+            color: `${neonPrimary}59`,
             letterSpacing: '0.12em',
             textTransform: 'uppercase' as const,
           },
@@ -323,7 +329,7 @@ export default function App() {
         const delta = { x: pos.x - defaultPos.x, y: pos.y - defaultPos.y };
         groupDeltas.set(groupId, delta);
 
-        const catInfo = DEVICE_CATEGORIES[cat as DeviceCategory];
+        const catInfo = categoryColors[cat as DeviceCategory];
         return {
           id: groupId,
           type: 'default',
@@ -377,7 +383,7 @@ export default function App() {
       d.connectedTo.forEach(pid => {
         if (!visibleIds.has(pid)) return;
         const parent = devices.find(x => x.id === pid);
-        const cat = DEVICE_CATEGORIES[d.category];
+        const cat = categoryColors[d.category];
         const edgeStatus =
           d.status === 'offline'
             ? 'offline'
@@ -402,7 +408,7 @@ export default function App() {
     });
 
     return { rfNodes, rfEdges };
-  }, [visibleDevices, viewMode, selectedDeviceId, devices, animationsEnabled, groupPositions]);
+  }, [visibleDevices, viewMode, selectedDeviceId, devices, animationsEnabled, groupPositions, categoryColors, statusColors, theme]);
 
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
@@ -569,7 +575,7 @@ export default function App() {
             </span>
           </div>
           <div className="legend">
-            {(Object.entries(DEVICE_CATEGORIES) as [string, typeof DEVICE_CATEGORIES[DeviceCategory]][]).map(
+            {(Object.entries(categoryColors) as [string, { label: string; color: string; bg: string }][]).map(
               ([cat, info]) => (
                 <span key={cat} className="legend-item">
                   <span className="legend-dot" style={{ background: info.color }} />
@@ -600,13 +606,13 @@ export default function App() {
             maxZoom={2}
             proOptions={{ hideAttribution: true }}
           >
-            <Background variant={BackgroundVariant.Lines} color="rgba(0,212,255,0.04)" gap={40} lineWidth={0.5} />
+            <Background variant={BackgroundVariant.Lines} color={theme.gridColor} gap={40} lineWidth={0.5} />
             <Controls style={{ background: '#1e293b', border: '1px solid #334155' }} />
             <MiniMap
               nodeColor={n => {
                 const d = devices.find(x => x.id === n.id);
                 if (!d) return '#1e293b';
-                return STATUS_COLORS[d.status];
+                return statusColors[d.status];
               }}
               style={{ background: '#0f172a', border: '1px solid #1e293b' }}
               maskColor="rgba(0,0,0,0.5)"

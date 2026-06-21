@@ -7,7 +7,7 @@ import {
   Phone, Glasses, Cpu, Gamepad2 as GameController,
 } from 'lucide-react';
 import type { Device, DeviceType } from '../types';
-import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
+import { useCategoryColors, useStatusColors } from '../contexts/ThemeContext';
 
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>> = {
   'router': Router, 'switch': GitBranch, 'access-point': Wifi, 'mesh-node': Wifi,
@@ -32,9 +32,11 @@ interface DevicePanelProps {
 }
 
 export default function DevicePanel({ device, allDevices, onClose, onEdit, onHide, onDelete }: DevicePanelProps) {
-  const cat = DEVICE_CATEGORIES[device.category];
+  const categoryColors = useCategoryColors();
+  const statusColors = useStatusColors();
+  const cat = categoryColors[device.category];
   const Icon = TYPE_ICONS[device.type] ?? Monitor;
-  const statusColor = STATUS_COLORS[device.status];
+  const statusColor = statusColors[device.status];
   const parents = allDevices.filter(d => device.connectedTo.includes(d.id));
   const children = allDevices.filter(d => d.connectedTo.includes(device.id));
 
@@ -108,7 +110,7 @@ export default function DevicePanel({ device, allDevices, onClose, onEdit, onHid
         <div className="panel-section">
           <h3>Connected To</h3>
           {parents.map(p => {
-            const pc = DEVICE_CATEGORIES[p.category];
+            const pc = categoryColors[p.category];
             const PI = TYPE_ICONS[p.type] ?? Monitor;
             return (
               <div key={p.id} className="conn-item">
@@ -125,13 +127,13 @@ export default function DevicePanel({ device, allDevices, onClose, onEdit, onHid
         <div className="panel-section">
           <h3>Devices Connected Here ({children.length})</h3>
           {children.map(c => {
-            const cc = DEVICE_CATEGORIES[c.category];
+            const cc = categoryColors[c.category];
             const CI = TYPE_ICONS[c.type] ?? Monitor;
             return (
               <div key={c.id} className="conn-item">
                 <CI size={14} color={cc.color} />
                 <span>{c.name}</span>
-                <div className="status-dot-sm" style={{ background: STATUS_COLORS[c.status] }} />
+                <div className="status-dot-sm" style={{ background: statusColors[c.status] }} />
               </div>
             );
           })}

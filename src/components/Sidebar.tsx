@@ -8,7 +8,9 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import type { Device, DeviceType, DeviceCategory, ViewMode, SortMode } from '../types';
-import { DEVICE_CATEGORIES, ROOMS, STATUS_COLORS } from '../types';
+import { ROOMS } from '../types';
+import { useCategoryColors, useStatusColors } from '../contexts/ThemeContext';
+import ThemePicker from './ThemePicker';
 
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string }>> = {
   'router': Router, 'switch': GitBranch, 'access-point': Wifi, 'mesh-node': Wifi,
@@ -65,6 +67,8 @@ export default function Sidebar({
   onAddDevice, onSelectDevice, onShowDevice, onAddRoom, onDeleteRoom, onDownload,
   selectedDeviceId,
 }: SidebarProps) {
+  const categoryColors = useCategoryColors();
+  const statusColors = useStatusColors();
   const onlineCount = devices.filter(d => d.status !== 'offline').length;
   const activeCount = devices.filter(d => d.status === 'active').length;
   const [newRoomName, setNewRoomName] = useState('');
@@ -188,7 +192,7 @@ export default function Sidebar({
 
       <Section title="Filter by Type">
         <div className="filter-list">
-          {(Object.entries(DEVICE_CATEGORIES) as [DeviceCategory, typeof DEVICE_CATEGORIES[DeviceCategory]][]).map(([cat, info]) => {
+          {(Object.entries(categoryColors) as [DeviceCategory, { label: string; color: string; bg: string }][]).map(([cat, info]) => {
             const count = devices.filter(d => d.category === cat).length;
             if (count === 0) return null;
             return (
@@ -216,10 +220,14 @@ export default function Sidebar({
         </label>
       </Section>
 
+      <Section title="Appearance">
+        <ThemePicker />
+      </Section>
+
       <Section title={`Devices (${sortedDevices.length})`}>
         <div className="device-list">
           {sortedDevices.map(device => {
-            const cat = DEVICE_CATEGORIES[device.category];
+            const cat = categoryColors[device.category];
             const Icon = TYPE_ICONS[device.type] ?? Monitor;
             return (
               <button
@@ -234,7 +242,7 @@ export default function Sidebar({
                   <span className="dli-name">{device.name}</span>
                   <span className="dli-room">{device.room}</span>
                 </div>
-                <div className="dli-status" style={{ background: STATUS_COLORS[device.status] }} />
+                <div className="dli-status" style={{ background: statusColors[device.status] }} />
               </button>
             );
           })}
@@ -245,7 +253,7 @@ export default function Sidebar({
         <Section title={`Hidden Devices (${hiddenDevices.length})`} defaultOpen={false}>
           <div className="device-list">
             {hiddenDevices.map(device => {
-              const cat = DEVICE_CATEGORIES[device.category];
+              const cat = categoryColors[device.category];
               const Icon = TYPE_ICONS[device.type] ?? Monitor;
               return (
                 <div key={device.id} className="hidden-device-item">

@@ -10,7 +10,7 @@ import {
   Phone, Glasses, Gamepad2 as GameController,
 } from 'lucide-react';
 import type { Device, DeviceType } from '../types';
-import { DEVICE_CATEGORIES, STATUS_COLORS } from '../types';
+import { useCategoryColors, useStatusColors } from '../contexts/ThemeContext';
 
 const TYPE_ICONS: Record<DeviceType, React.FC<{ size: number; color?: string; strokeWidth?: number }>> = {
   'router':           Router,
@@ -90,12 +90,14 @@ const TYPE_EMOJI: Partial<Record<DeviceType, string>> = {
 export type DeviceNodeData = { device: Device };
 
 function DeviceNode({ data, selected }: NodeProps) {
+  const categoryColors = useCategoryColors();
+  const statusColors = useStatusColors();
   const d = data as unknown as DeviceNodeData;
   const device = d.device;
-  const cat = DEVICE_CATEGORIES[device.category];
+  const cat = categoryColors[device.category];
   const Icon = TYPE_ICONS[device.type] ?? Cpu;
   const emoji = TYPE_EMOJI[device.type] ?? '📦';
-  const statusColor = STATUS_COLORS[device.status];
+  const statusColor = statusColors[device.status];
   const isActive = device.status === 'active';
   const isOffline = device.status === 'offline';
   const isNetwork = device.category === 'network';
