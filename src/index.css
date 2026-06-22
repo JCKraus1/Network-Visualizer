@@ -73,6 +73,53 @@ body {
   overflow: hidden;
   z-index: 10;
   position: relative;
+  transition: width 0.25s ease, min-width 0.25s ease;
+}
+
+/* ── Collapsed sidebar ── */
+.sidebar.collapsed {
+  width: 52px;
+  min-width: 52px;
+}
+.sidebar.collapsed .sidebar-header {
+  padding: 14px 8px;
+}
+.sidebar.collapsed .sidebar-logo {
+  justify-content: space-between;
+  margin-bottom: 0;
+}
+.sidebar.collapsed .sidebar-footer {
+  flex-direction: column;
+  padding: 10px 8px;
+  gap: 6px;
+  align-items: center;
+}
+.sidebar.collapsed .add-device-btn {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  min-width: unset;
+  border-radius: 50%;
+}
+
+/* ── Collapse toggle button ── */
+.sidebar-collapse-btn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 4px 5px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  transition: color 0.15s, background 0.15s;
+  flex-shrink: 0;
+}
+.sidebar-collapse-btn:hover {
+  color: var(--neon-primary, #00d4ff);
+  background: rgba(255,255,255,0.06);
 }
 .sidebar::before {
   content: '';
@@ -1094,34 +1141,122 @@ code {
 .theme-name { flex: 1; }
 .theme-check { font-size: 10px; font-weight: 800; opacity: 0.9; }
 
-/* ─── Arctic light-mode overrides ────────────
-   Most things work via CSS vars, but some structural
-   elements need explicit light-mode treatment.     */
-[data-theme-light="true"] body {
+/* ─── Light-mode overrides (any theme with light: true) ──────────────
+   Uses CSS vars set by the theme so any future light theme works too. */
+[data-theme-light="true"] body { color: var(--text-bright); }
+
+[data-theme-light="true"] .sidebar {
+  background: linear-gradient(180deg, var(--bg-dark) 0%, var(--bg-void) 100%);
+  border-right: 1px solid var(--border-dim);
+}
+[data-theme-light="true"] .sidebar::before { opacity: 0; }
+[data-theme-light="true"] .sidebar-header {
+  background: var(--bg-panel);
+  border-bottom-color: var(--border-dim);
+}
+[data-theme-light="true"] .sidebar-stats {
+  background: rgba(0,0,0,0.03);
+  border-color: var(--border-dim);
+}
+[data-theme-light="true"] .stat-val { color: var(--neon-primary, #3b82f6); text-shadow: none; }
+[data-theme-light="true"] .topbar { background: var(--bg-panel); border-bottom-color: var(--border-dim); }
+[data-theme-light="true"] .graph-container { background: var(--bg-void); }
+
+[data-theme-light="true"] .device-panel { background: var(--bg-panel); }
+[data-theme-light="true"] .modal { background: var(--bg-panel); }
+
+[data-theme-light="true"] .dn-card {
+  background: var(--bg-card);
+  box-shadow: 0 1px 8px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.9);
+}
+[data-theme-light="true"] .dn-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); }
+[data-theme-light="true"] .dn-card.dn-active {
+  border-color: rgba(5,150,105,0.35);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.1), 0 0 10px rgba(5,150,105,0.08);
+}
+[data-theme-light="true"] .dn-card.dn-active::after {
+  background: linear-gradient(90deg, transparent 0%, rgba(5,150,105,0.45) 40%, rgba(5,150,105,0.45) 60%, transparent 100%);
+}
+[data-theme-light="true"] .dn-pulse { opacity: 0.5; }
+[data-theme-light="true"] .dn-name { color: var(--text-bright); }
+[data-theme-light="true"] .dn-type { color: var(--text-dim); }
+[data-theme-light="true"] .dn-brand { color: var(--text-dim); }
+[data-theme-light="true"] .dn-handle { border-color: rgba(255,255,255,0.8) !important; }
+
+[data-theme-light="true"] .section-content { background: transparent; }
+[data-theme-light="true"] .sidebar-section { border-bottom-color: var(--border-dim); }
+[data-theme-light="true"] .section-toggle { color: var(--text-dim); }
+[data-theme-light="true"] .section-toggle:hover { color: var(--neon-primary, #3b82f6); }
+
+[data-theme-light="true"] .view-tab {
+  background: rgba(0,0,0,0.03);
+  border-color: var(--border-dim);
+  color: var(--text-primary);
+}
+[data-theme-light="true"] .view-tab.active {
+  background: rgba(59,130,246,0.1);
+  border-color: var(--neon-primary, #3b82f6);
+  color: var(--neon-primary, #3b82f6);
+  text-shadow: none;
+  box-shadow: none;
+}
+[data-theme-light="true"] .sort-select {
+  background: rgba(0,0,0,0.03);
+  border-color: var(--border-dim);
   color: var(--text-bright);
 }
-[data-theme-light="true"] .sidebar {
-  background: linear-gradient(180deg, rgba(240,247,255,0.99) 0%, rgba(232,242,255,0.99) 100%);
-  border-right: 1px solid rgba(14,165,233,0.15);
+[data-theme-light="true"] .sort-select option { background: var(--bg-panel); color: var(--text-bright); }
+
+[data-theme-light="true"] .device-list-item:hover { background: rgba(0,0,0,0.04); }
+[data-theme-light="true"] .device-list-item.selected {
+  background: rgba(59,130,246,0.07);
+  border-color: rgba(59,130,246,0.2);
+  box-shadow: none;
 }
-[data-theme-light="true"] .sidebar::before { opacity: 0.3; }
-[data-theme-light="true"] .sidebar-header { background: rgba(220,238,255,0.8); }
-[data-theme-light="true"] .topbar { background: rgba(240,247,255,0.98); }
-[data-theme-light="true"] .device-panel {
-  background: linear-gradient(160deg, rgba(248,252,255,0.99) 0%, rgba(240,248,255,0.99) 100%);
+[data-theme-light="true"] .dli-name { color: var(--text-bright); }
+
+[data-theme-light="true"] .toggle {
+  background: rgba(0,0,0,0.08);
+  border-color: rgba(0,0,0,0.15);
 }
-[data-theme-light="true"] .modal {
-  background: linear-gradient(160deg, rgba(248,252,255,0.99) 0%, rgba(240,248,255,0.99) 100%);
+[data-theme-light="true"] .toggle-knob { background: rgba(0,0,0,0.3); }
+
+[data-theme-light="true"] .add-device-btn {
+  background: linear-gradient(135deg, rgba(59,130,246,0.1), rgba(37,99,235,0.06));
+  border-color: rgba(59,130,246,0.3);
+  color: var(--neon-primary, #3b82f6);
+  text-shadow: none;
+  box-shadow: none;
 }
-[data-theme-light="true"] .dn-card {
-  background: linear-gradient(160deg, rgba(252,255,255,0.98) 0%, rgba(242,250,255,0.99) 100%);
-  box-shadow: 0 2px 20px rgba(14,165,233,0.1), inset 0 1px 0 rgba(255,255,255,0.8);
+[data-theme-light="true"] .add-device-btn:hover {
+  background: linear-gradient(135deg, rgba(59,130,246,0.16), rgba(37,99,235,0.12));
+  box-shadow: 0 0 10px rgba(59,130,246,0.12);
 }
-[data-theme-light="true"] .dn-name { color: var(--text-bright); }
-[data-theme-light="true"] .view-tab { background: rgba(14,165,233,0.06); }
-[data-theme-light="true"] .sort-select { background: rgba(14,165,233,0.05); color: var(--text-bright); }
+[data-theme-light="true"] .download-btn {
+  background: rgba(0,0,0,0.03);
+  border-color: var(--border-dim);
+  color: var(--text-primary);
+}
+[data-theme-light="true"] .sidebar-footer {
+  background: rgba(0,0,0,0.02);
+  border-top-color: var(--border-dim);
+}
+
 [data-theme-light="true"] .modal-form input,
-[data-theme-light="true"] .modal-form select { background: rgba(14,165,233,0.04); color: var(--text-bright); }
-[data-theme-light="true"] .section-content { background: transparent; }
-[data-theme-light="true"] .device-list-item:hover { background: rgba(14,165,233,0.08); }
-[data-theme-light="true"] .graph-container { background: var(--bg-void); }
+[data-theme-light="true"] .modal-form select {
+  background: rgba(0,0,0,0.03);
+  border-color: var(--border-dim);
+  color: var(--text-bright);
+}
+[data-theme-light="true"] code {
+  background: rgba(0,0,0,0.05);
+  border-color: var(--border-dim);
+  color: var(--neon-primary, #3b82f6);
+}
+[data-theme-light="true"] .theme-item:hover { background: rgba(0,0,0,0.05); }
+[data-theme-light="true"] .filter-item { color: var(--text-primary); }
+[data-theme-light="true"] .filter-count {
+  background: rgba(0,0,0,0.04);
+  border-color: var(--border-dim);
+  color: var(--text-dim);
+}
