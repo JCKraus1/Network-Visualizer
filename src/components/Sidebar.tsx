@@ -2,7 +2,7 @@ import {
   Router, GitBranch, Wifi, Monitor, Laptop, Server, HardDrive,
   Smartphone, Tablet, Tv, Cast, Gamepad2, Volume2,
   Camera, Lightbulb, Thermometer, Radio, Home, Printer,
-  Plus, ChevronDown, ChevronRight, Globe,
+  Plus, ChevronDown, ChevronRight, ChevronLeft, Globe,
   Watch, Plug, Lock, Bell, Box, Music2, Film,
   Phone, Glasses, Cpu, Zap, Gamepad2 as GameController,
 } from 'lucide-react';
@@ -72,6 +72,15 @@ export default function Sidebar({
   const onlineCount = devices.filter(d => d.status !== 'offline').length;
   const activeCount = devices.filter(d => d.status === 'active').length;
   const [newRoomName, setNewRoomName] = useState('');
+  const [collapsed, setCollapsed] = useState(() => localStorage.getItem('hv-sidebar-collapsed') === 'true');
+
+  const toggleCollapsed = () => {
+    setCollapsed(c => {
+      const next = !c;
+      localStorage.setItem('hv-sidebar-collapsed', String(next));
+      return next;
+    });
+  };
 
   const toggleRoom = (room: string) => {
     onFilterRooms(
@@ -119,29 +128,34 @@ export default function Sidebar({
   };
 
   return (
-    <aside className="sidebar">
+    <aside className={`sidebar${collapsed ? ' collapsed' : ''}`}>
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <Globe size={20} color="#06b6d4" />
-          <span>Home Network</span>
+          <Globe size={20} color="var(--neon-primary, #06b6d4)" />
+          {!collapsed && <span>Home Network</span>}
+          <button className="sidebar-collapse-btn" onClick={toggleCollapsed} title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}>
+            {collapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
+          </button>
         </div>
-        <div className="sidebar-stats">
-          <div className="stat">
-            <span className="stat-val">{onlineCount}</span>
-            <span className="stat-lbl">Online</span>
+        {!collapsed && (
+          <div className="sidebar-stats">
+            <div className="stat">
+              <span className="stat-val">{onlineCount}</span>
+              <span className="stat-lbl">Online</span>
+            </div>
+            <div className="stat">
+              <span className="stat-val" style={{ color: '#22c55e' }}>{activeCount}</span>
+              <span className="stat-lbl">Active</span>
+            </div>
+            <div className="stat">
+              <span className="stat-val">{devices.length}</span>
+              <span className="stat-lbl">Total</span>
+            </div>
           </div>
-          <div className="stat">
-            <span className="stat-val" style={{ color: '#22c55e' }}>{activeCount}</span>
-            <span className="stat-lbl">Active</span>
-          </div>
-          <div className="stat">
-            <span className="stat-val">{devices.length}</span>
-            <span className="stat-lbl">Total</span>
-          </div>
-        </div>
+        )}
       </div>
 
-      <div className="sidebar-content">
+      {!collapsed && <div className="sidebar-content">
       <Section title="View Mode">
         <div className="view-tabs">
           {(['topology', 'by-room', 'by-type'] as ViewMode[]).map(v => (
@@ -299,15 +313,18 @@ export default function Sidebar({
         )}
       </Section>
 
-      </div>{/* end sidebar-content */}
+      </div>}{/* end sidebar-content */}
+
       <div className="sidebar-footer">
-        <button className="add-device-btn" onClick={onAddDevice}>
+        <button className="add-device-btn" onClick={onAddDevice} title="Add Device">
           <Plus size={16} />
-          Add Device
+          {!collapsed && <span>Add Device</span>}
         </button>
-        <button className="download-btn" onClick={onDownload}>
-          ↓ Export JSON
-        </button>
+        {!collapsed && (
+          <button className="download-btn" onClick={onDownload}>
+            ↓ Export JSON
+          </button>
+        )}
       </div>
     </aside>
   );
