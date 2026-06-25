@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useEffect, useRef } from 'react';
+import { useState, useCallback, useMemo, useEffect, useRef, lazy, Suspense } from 'react';
 import {
   ReactFlow, Background, Controls, MiniMap,
   useNodesState, useEdgesState,
@@ -17,6 +17,8 @@ import Sidebar from './components/Sidebar';
 import DevicePanel from './components/DevicePanel';
 import DeviceModal from './components/DeviceModal';
 import WelcomeScreen from './components/WelcomeScreen';
+
+const NetworkScene3D = lazy(() => import('./components/NetworkScene3D'));
 
 const LS_KEY = 'hv-devices';
 const LS_ROOMS_KEY = 'hv-rooms';
@@ -170,6 +172,7 @@ export default function App() {
   const [filterRooms, setFilterRooms] = useState<string[]>([]);
   const [filterCategories, setFilterCategories] = useState<DeviceCategory[]>([]);
   const [animationsEnabled, setAnimationsEnabled] = useState(true);
+  const [is3D, setIs3D] = useState(false);
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>();
   const [editingDevice, setEditingDevice] = useState<Device | null | undefined>(undefined);
   const [showImport, setShowImport] = useState(false);
@@ -574,6 +577,13 @@ export default function App() {
               offline
             </span>
           </div>
+          <button
+            className={`view-3d-btn${is3D ? ' active' : ''}`}
+            onClick={() => setIs3D(v => !v)}
+            title={is3D ? 'Switch to 2D view' : 'Switch to 3D view'}
+          >
+            {is3D ? '2D' : '3D'}
+          </button>
           <div className="legend">
             {(Object.entries(categoryColors) as [string, { label: string; color: string; bg: string }][]).map(
               ([cat, info]) => (
@@ -590,34 +600,45 @@ export default function App() {
         </div>
 
         <div className="graph-container">
-          <ReactFlow
-            nodes={nodes}
-            edges={edges}
-            onNodesChange={onNodesChange}
-            onEdgesChange={onEdgesChange}
-            nodeTypes={nodeTypes}
-            edgeTypes={edgeTypes}
-            onNodeClick={onNodeClick}
-            onPaneClick={onPaneClick}
-            onNodeDragStop={handleNodeDragStop}
-            fitView
-            fitViewOptions={{ padding: 0.2 }}
-            minZoom={0.2}
-            maxZoom={2}
-            proOptions={{ hideAttribution: true }}
-          >
-            <Background variant={BackgroundVariant.Lines} color={theme.gridColor} gap={40} lineWidth={0.5} />
-            <Controls style={{ background: '#1e293b', border: '1px solid #334155' }} />
-            <MiniMap
-              nodeColor={n => {
-                const d = devices.find(x => x.id === n.id);
-                if (!d) return '#1e293b';
-                return statusColors[d.status];
-              }}
-              style={{ background: '#0f172a', border: '1px solid #1e293b' }}
-              maskColor="rgba(0,0,0,0.5)"
-            />
-          </ReactFlow>
+          {is3D ? (
+            <Suspense fallback={<div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#00d4ff', fontSize: 14 }}>Loading 3D…</div>}>
+              <NetworkScene3D
+                devices={visibleDevices}
+                selectedDeviceId={selectedDeviceId ?? undefined}
+                onSelectDevice={setSelectedDeviceId}
+                animationsEnabled={animationsEnabled}
+              />
+            </Suspense>
+          ) : (
+            <ReactFlow
+              nodes={nodes}
+              edges={edges}
+              onNodesChange={onNodesChange}
+              onEdgesChange={onEdgesChange}
+              nodeTypes={nodeTypes}
+              edgeTypes={edgeTypes}
+              onNodeClick={onNodeClick}
+              onPaneClick={onPaneClick}
+              onNodeDragStop={handleNodeDragStop}
+              fitView
+              fitViewOptions={{ padding: 0.2 }}
+              minZoom={0.2}
+              maxZoom={2}
+              proOptions={{ hideAttribution: true }}
+            >
+              <Background variant={BackgroundVariant.Lines} color={theme.gridColor} gap={40} lineWidth={0.5} />
+              <Controls style={{ background: '#1e293b', border: '1px solid #334155' }} />
+              <MiniMap
+                nodeColor={n => {
+                  const d = devices.find(x => x.id === n.id);
+                  if (!d) return '#1e293b';
+                  return statusColors[d.status];
+                }}
+                style={{ background: '#0f172a', border: '1px solid #1e293b' }}
+                maskColor="rgba(0,0,0,0.5)"
+              />
+            </ReactFlow>
+          )}
         </div>
 
         {selectedDevice && (

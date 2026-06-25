@@ -1059,6 +1059,32 @@ code {
 }
 .demo-btn:hover { background: rgba(0,212,255,0.08); color: var(--text-primary); border-color: rgba(0,212,255,0.25); }
 
+/* ─── 3D View Toggle ──────────────────────── */
+.view-3d-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: 1px solid rgba(0,212,255,0.2);
+  background: rgba(0,212,255,0.05);
+  color: var(--text-dim);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.view-3d-btn:hover {
+  border-color: rgba(0,212,255,0.4);
+  color: var(--neon-primary, #00d4ff);
+  background: rgba(0,212,255,0.1);
+}
+.view-3d-btn.active {
+  background: rgba(0,212,255,0.15);
+  border-color: var(--neon-primary, #00d4ff);
+  color: var(--neon-primary, #00d4ff);
+  box-shadow: 0 0 10px rgba(0,212,255,0.15);
+}
+
 /* ─── Re-import button ────────────────────── */
 .rescan-btn {
   margin-left: 8px; padding: 6px 12px; border-radius: 7px;
